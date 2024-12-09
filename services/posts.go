@@ -14,5 +14,6 @@ func GetPostByID(id string) models.Post {
 }
 
 func CreatePost(postData models.Post) models.Post {
+	// TODO: Parse and validate the new post data
 	return repos.CreatePost(postData)
 }
