@@ -1,4 +1,4 @@
-module cvwo/backend
+module cvwo-backend
 
 go 1.23.4
 
