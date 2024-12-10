@@ -21,7 +21,7 @@ func (repo *PostRepo) GetAll() ([]models.Post, error) {
 	if err != nil {
 		return nil, err
 	}
-	return posts, err
+	return posts, nil
 }
 
 func (repo *PostRepo) GetByID(id uint) (*models.Post, error) {
