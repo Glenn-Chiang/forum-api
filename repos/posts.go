@@ -17,8 +17,7 @@ func NewPostRepo(db *gorm.DB) *PostRepo {
 
 func (repo *PostRepo) GetAll() ([]models.Post, error) {
 	var posts []models.Post
-	err := repo.DB.Find(&posts).Error
-	if err != nil {
+	if err := repo.DB.Find(&posts).Error; err != nil {
 		return nil, err
 	}
 	return posts, nil
@@ -26,8 +25,7 @@ func (repo *PostRepo) GetAll() ([]models.Post, error) {
 
 func (repo *PostRepo) GetByID(id uint) (*models.Post, error) {
 	var post models.Post
-	err := repo.DB.First(&post, id).Error
-	if err != nil {
+	if err := repo.DB.First(&post, id).Error; err != nil {
 		return nil, err
 	}
 	return &post, nil
@@ -75,6 +73,10 @@ func (repo *PostRepo) UpdateContent(id uint, content string) (*models.Post, erro
 	}
 
 	return &post, nil
+}
+
+func (repo *PostRepo) AssociatePostWithTopics(post *models.Post, topics []models.Topic) error {
+	return repo.DB.Model(post).Association("Topics").Append(topics)
 }
 
 func (repo *PostRepo) Delete(id uint) error {

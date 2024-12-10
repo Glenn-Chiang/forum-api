@@ -31,6 +31,15 @@ func (repo *TopicRepo) GetByID(id uint) (*models.Topic, error) {
 	return &topic, nil
 }
 
+// Get the list of topics with the given IDs
+func (repo *TopicRepo) GetByIDs(ids []uint) ([]models.Topic, error){
+	var topics []models.Topic
+	if err := repo.DB.Where("id IN ?", ids).Find(&topics).Error; err != nil {
+		return nil, err
+	}
+	return topics, nil
+}
+
 func (repo *TopicRepo) Create(topic *models.Topic) (*models.Topic, error) {
 	if err := repo.DB.Create(topic).Error; err != nil {
 		return nil, err
