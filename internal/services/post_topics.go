@@ -1,7 +1,7 @@
 package services
 
 import (
-	"cvwo-backend/repos"
+"cvwo-backend/internal/repos"
 )
 
 type PostTopicService struct {

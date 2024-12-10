@@ -1,8 +1,8 @@
 package services
 
 import (
-	"cvwo-backend/models"
-	"cvwo-backend/repos"
+	"cvwo-backend/internal/models"
+	"cvwo-backend/internal/repos"
 )
 
 type CommentService struct {

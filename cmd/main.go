@@ -5,11 +5,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"cvwo-backend/controllers"
-	"cvwo-backend/data"
-	"cvwo-backend/models"
-	"cvwo-backend/repos"
-	"cvwo-backend/services"
+	"cvwo-backend/internal/controllers"
+	"cvwo-backend/internal/data"
+	"cvwo-backend/internal/models"
+	"cvwo-backend/internal/repos"
+	"cvwo-backend/internal/services"
 )
 
 const databaseURI = "index.db"

@@ -1,7 +1,7 @@
 package repos
 
 import (
-	"cvwo-backend/models"
+	"cvwo-backend/internal/models"
 	"fmt"
 
 	"gorm.io/gorm"

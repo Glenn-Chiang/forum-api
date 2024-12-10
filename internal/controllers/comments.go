@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"cvwo-backend/models"
-	"cvwo-backend/services"
+	"cvwo-backend/internal/models"
+	"cvwo-backend/internal/services"
 	"net/http"
 	"strconv"
 

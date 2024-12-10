@@ -5,7 +5,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"cvwo-backend/models"
+	"cvwo-backend/internal/models"
 )
 
 var posts = []models.Post{
