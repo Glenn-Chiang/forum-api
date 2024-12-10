@@ -4,6 +4,7 @@ import (
 	"cvwo-backend/models"
 	"cvwo-backend/services"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -28,9 +29,12 @@ func (controller *PostController) GetAll(ctx *gin.Context) {
 
 // GET /posts/:id
 func (controller *PostController) GetByID(ctx *gin.Context) {
-	id := ctx.Param("id")
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid post ID"})
+	}
 
-	post, err := controller.service.GetByID(id)
+	post, err := controller.service.GetByID(uint(id))
 	if err != nil {
 		ctx.IndentedJSON(http.StatusNotFound, gin.H{"message": "post not found"})
 		return
@@ -56,10 +60,12 @@ func (controller *PostController) Create(ctx *gin.Context) {
 }
 
 func (controller *PostController) Delete(ctx *gin.Context) {
-	id := ctx.Param("id")
-
-	err := controller.service.Delete(id)
+	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid post ID"})		
+	}
+
+	if controller.service.Delete(uint(id)); err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}

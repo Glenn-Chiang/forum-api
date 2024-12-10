@@ -24,7 +24,7 @@ func (repo *PostRepo) GetAll() ([]models.Post, error) {
 	return posts, err
 }
 
-func (repo *PostRepo) GetByID(id string) (*models.Post, error) {
+func (repo *PostRepo) GetByID(id uint) (*models.Post, error) {
 	var post models.Post
 	err := repo.DB.First(&post, id).Error
 	if err != nil {
@@ -40,7 +40,7 @@ func (repo *PostRepo) Create(post *models.Post) (*models.Post, error) {
 	return post, nil
 }
 
-func (repo *PostRepo) Delete(id string) error {
+func (repo *PostRepo) Delete(id uint) error {
 	result := repo.DB.Delete(&models.User{}, id)
 	if result.Error != nil {
 		return result.Error

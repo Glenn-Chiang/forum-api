@@ -17,7 +17,7 @@ func (service *PostService) GetAll() ([]models.Post, error) {
 	return service.repo.GetAll()
 }
 
-func (service *PostService) GetByID(id string) (*models.Post, error) {
+func (service *PostService) GetByID(id uint) (*models.Post, error) {
 	return service.repo.GetByID(id)
 }
 
@@ -26,6 +26,6 @@ func (service *PostService) Create(postData *models.Post) (*models.Post, error) 
 	return service.repo.Create(postData)
 }
 
-func (service *PostService) Delete(id string) error {
+func (service *PostService) Delete(id uint) error {
 	return service.repo.Delete(id)
 }
