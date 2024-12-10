@@ -40,6 +40,19 @@ func (repo *PostRepo) GetByUserID(userId uint) ([]models.Post, error) {
 	return posts, nil
 }
 
+// Get all posts associated with the given topic
+func (repo *PostRepo) GetByTopic(topicId uint) ([]models.Post, error) {
+	var posts []models.Post
+	err := repo.DB.Joins("JOIN post_topics ON posts.id = post_topics.post_id").
+		Where("post_topics.topic_id = ?", topicId).
+		Find(&posts).Error
+	if err != nil {
+		return nil, err
+	}
+	return posts, nil
+}
+
+// Create a new post
 func (repo *PostRepo) Create(post *models.Post) (*models.Post, error) {
 	if err := repo.DB.Create(post).Error; err != nil {
 		return nil, err
@@ -75,6 +88,7 @@ func (repo *PostRepo) UpdateContent(id uint, content string) (*models.Post, erro
 	return &post, nil
 }
 
+// Associate the given post with the given list of topics
 func (repo *PostRepo) AssociatePostWithTopics(post *models.Post, topics []models.Topic) error {
 	return repo.DB.Model(post).Association("Topics").Append(topics)
 }
