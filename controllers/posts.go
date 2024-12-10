@@ -42,6 +42,7 @@ func (controller *PostController) GetByID(ctx *gin.Context) {
 	ctx.IndentedJSON(http.StatusOK, post)
 }
 
+// POST /posts
 func (controller *PostController) Create(ctx *gin.Context) {
 	var post models.Post
 
@@ -59,6 +60,7 @@ func (controller *PostController) Create(ctx *gin.Context) {
 	ctx.IndentedJSON(http.StatusCreated, newPost)
 }
 
+// DELETE /posts/:id
 func (controller *PostController) Delete(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {

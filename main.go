@@ -29,16 +29,51 @@ func main() {
 		log.Fatalf("Failed to seed database: %v", err)
 	}
 
-	// Initialize layers
+	// Initialize feature layers
+	// Users
+	userRepo := repos.NewUserRepo(db)
+	userService := services.NewUserService(*userRepo)
+	userController := controllers.NewUserController(*userService)
+
+	// Posts
 	postRepo := repos.NewPostRepo(db)
 	postService := services.NewPostService(*postRepo)
 	postController := controllers.NewPostController(*postService)
 
-	// Configure routes
+	// Comments
+	commentRepo := repos.NewCommentRepo(db)
+	commentService := services.NewCommentService(*commentRepo)
+	commentController := controllers.NewCommentController(*commentService)
+
+	// Topics
+	topicRepo := repos.NewTopicRepo(db)
+	topicService := services.NewTopicService(*topicRepo)
+	topicController := controllers.NewTopicController(*topicService)
+
+	// Initialize router
 	router := gin.Default()
+
+	// Configure routes
+
+	// Posts
 	router.GET("/posts", postController.GetAll)
 	router.GET("/posts/:id", postController.GetByID)
 	router.POST("/posts", postController.Create)
+	router.DELETE("/posts/:id", postController.Delete)
+
+	// Users
+	router.GET("/users", userController.GetAll)
+	router.GET("/users/:id", userController.GetByID)
+	router.POST("/users", userController.Create)
+
+	// Comments
+	router.POST("/comments", commentController.Create)
+	router.DELETE("/comments/:id", commentController.Delete)
+
+	// Topics
+	router.GET("/topics", topicController.GetAll)
+	router.POST("/topics", topicController.Create)
+	router.DELETE("/topics/:id", topicController.Delete)
 
 	router.Run(serverUrl)
 }
