@@ -7,6 +7,7 @@ import (
 
 	"cvwo-backend/controllers"
 	"cvwo-backend/data"
+	"cvwo-backend/models"
 	"cvwo-backend/repos"
 	"cvwo-backend/services"
 )
@@ -18,6 +19,12 @@ func main() {
 	// Initialize database
 	db := data.MustOpenDB(databaseURI)
 
+	// Migrate schema
+	if err := db.AutoMigrate(&models.User{}, &models.Post{}, &models.Comment{}); err != nil {
+		log.Fatalf("Failed to migrate tables: %v", err)
+	}
+
+	// Seed database with initial data
 	if err := data.SeedData(db); err != nil {
 		log.Fatalf("Failed to seed database: %v", err)
 	}
