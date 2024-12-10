@@ -33,6 +33,15 @@ func (repo *PostRepo) GetByID(id uint) (*models.Post, error) {
 	return &post, nil
 }
 
+// Get all posts made by the given user
+func (repo *PostRepo) GetByUserID(userId uint) ([]models.Post, error) {
+	var posts []models.Post
+	if err := repo.DB.Find(&posts, models.Post{AuthorID: userId}).Error; err != nil {
+		return nil, err
+	}
+	return posts, nil
+}
+
 func (repo *PostRepo) Create(post *models.Post) (*models.Post, error) {
 	if err := repo.DB.Create(post).Error; err != nil {
 		return nil, err
