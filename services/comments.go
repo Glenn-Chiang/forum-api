@@ -21,6 +21,10 @@ func (service *CommentService) GetByID(id uint) (*models.Comment, error) {
 	return service.repo.GetByID(id)
 }
 
+func (service *CommentService) GetByPostID(id uint) ([]models.Comment, error) {
+	return service.repo.GetByPostID(id)
+}
+
 func (service *CommentService) Create(postData *models.Comment) (*models.Comment, error) {
 	// TODO: Parse and validate the new post data
 	return service.repo.Create(postData)

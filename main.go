@@ -67,6 +67,7 @@ func main() {
 	router.POST("/users", userController.Create)
 
 	// Comments
+	router.GET("/posts/:id/comments", commentController.GetByPostID)
 	router.POST("/comments", commentController.Create)
 	router.DELETE("/comments/:id", commentController.Delete)
 

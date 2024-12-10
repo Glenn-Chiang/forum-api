@@ -21,7 +21,7 @@ func NewPostController(service services.PostService) *PostController {
 func (controller *PostController) GetAll(ctx *gin.Context) {
 	posts, err := controller.service.GetAll()
 	if err != nil {
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch posts"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch posts"})
 		return
 	}
 	ctx.IndentedJSON(http.StatusOK, posts)

@@ -17,7 +17,21 @@ func NewCommentController(service services.CommentService) *CommentController {
 	return &CommentController{service}
 }
 
-// TODO: Get comments associated with a post
+// GET /posts/:id/comments
+func (controller *CommentController) GetByPostID(ctx *gin.Context) {
+	postId, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid post ID"})
+	}
+
+	comments, err := controller.service.GetByPostID(uint(postId))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch comments"})
+		return
+	}
+
+	ctx.IndentedJSON(http.StatusOK, comments)
+}
 
 // POST /comments
 func (controller *CommentController) Create(ctx *gin.Context) {
