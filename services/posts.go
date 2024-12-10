@@ -25,3 +25,7 @@ func (service *PostService) Create(postData *models.Post) (*models.Post, error) 
 	// TODO: Parse and validate the new post data
 	return service.repo.Create(postData)
 }
+
+func (service *PostService) Delete(id string) error {
+	return service.repo.Delete(id)
+}

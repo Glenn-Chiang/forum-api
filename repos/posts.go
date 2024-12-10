@@ -2,6 +2,7 @@ package repos
 
 import (
 	"cvwo-backend/models"
+	"fmt"
 
 	"gorm.io/gorm"
 )
@@ -37,4 +38,15 @@ func (repo *PostRepo) Create(post *models.Post) (*models.Post, error) {
 		return nil, err
 	}
 	return post, nil
+}
+
+func (repo *PostRepo) Delete(id string) error {
+	result := repo.DB.Delete(&models.User{}, id)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("post not found")
+	}
+	return nil
 }

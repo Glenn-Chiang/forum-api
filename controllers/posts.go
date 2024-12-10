@@ -54,3 +54,15 @@ func (controller *PostController) Create(ctx *gin.Context) {
 
 	ctx.IndentedJSON(http.StatusCreated, newPost)
 }
+
+func (controller *PostController) Delete(ctx *gin.Context) {
+	id := ctx.Param("id")
+
+	err := controller.service.Delete(id)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusNoContent, nil)
+}
