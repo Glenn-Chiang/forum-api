@@ -21,6 +21,8 @@ type Comment struct {
 	Content string `json:"content"`
 	PostID uint `json:"postId"`
 	Post Post `gorm:"constraint:OnDelete:SET NULL;"`
+	AuthorID uint `json:"authorId"`
+	Author User `gorm:"constraint:OnDelete:SET NULL;"`
 }
 
 type Topic struct {
