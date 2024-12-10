@@ -56,6 +56,20 @@ func (repo *CommentRepo) Create(comment *models.Comment) (*models.Comment, error
 	return comment, nil
 }
 
+// Update the content of the given comment
+func (repo *CommentRepo) Update(id uint, content string) (*models.Comment, error) {
+	var comment models.Comment
+	if err := repo.DB.First(&comment, id).Error; err != nil {
+		return nil, err
+	}
+
+	if err := repo.DB.Model(&comment).Updates(models.Comment{Content: content}).Error; err != nil {
+		return nil, err
+	}
+
+	return &comment, nil
+}
+
 func (repo *CommentRepo) Delete(id uint) error {
 	result := repo.DB.Delete(&models.Comment{}, id)
 	if result.Error != nil {
