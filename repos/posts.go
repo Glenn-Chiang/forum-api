@@ -49,6 +49,34 @@ func (repo *PostRepo) Create(post *models.Post) (*models.Post, error) {
 	return post, nil
 }
 
+// Update only the title of the given post
+func (repo *PostRepo) UpdateTitle(id uint, title string) (*models.Post, error) {
+	var post models.Post
+	if err := repo.DB.First(&post, id).Error; err != nil {
+		return nil, err
+	}
+
+	if err := repo.DB.Model(&post).Updates(models.Post{Title: title}).Error; err != nil {
+		return nil, err
+	}
+
+	return &post, nil
+}
+
+// Update only the content of the given post
+func (repo *PostRepo) UpdateContent(id uint, content string) (*models.Post, error) {
+	var post models.Post
+	if err := repo.DB.First(&post, id).Error; err != nil {
+		return nil, err
+	}
+
+	if err := repo.DB.Model(&post).Updates(models.Post{Content: content}).Error; err != nil {
+		return nil, err
+	}
+
+	return &post, nil
+}
+
 func (repo *PostRepo) Delete(id uint) error {
 	result := repo.DB.Delete(&models.User{}, id)
 	if result.Error != nil {
