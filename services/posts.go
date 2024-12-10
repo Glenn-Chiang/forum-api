@@ -21,6 +21,10 @@ func (service *PostService) GetByID(id uint) (*models.Post, error) {
 	return service.repo.GetByID(id)
 }
 
+func (service *PostService) GetByTopic(topicID uint) ([]models.Post, error) {
+	return service.repo.GetByTopic(topicID)
+}
+
 func (service *PostService) Create(postData *models.Post) (*models.Post, error) {
 	// TODO: Parse and validate the new post data
 	return service.repo.Create(postData)

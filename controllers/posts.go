@@ -17,9 +17,25 @@ func NewPostController(service services.PostService) *PostController {
 	return &PostController{service}
 }
 
-// GET /posts
+// GET /posts or /posts?topic_id=1
 func (controller *PostController) GetAll(ctx *gin.Context) {
-	posts, err := controller.service.GetAll()
+	topicIdParam := ctx.Query("topic_id")
+
+	var posts []models.Post
+	var err error
+
+	if topicIdParam != "" { // If topicId is specified
+		// Parse topic_id from request query param
+		topicID, convErr := strconv.Atoi(topicIdParam)
+		if convErr != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid topic_id"})
+			return
+		}
+		posts, err = controller.service.GetByTopic(uint(topicID))
+	} else { // If no topicId is specified
+		posts, err = controller.service.GetAll()
+	}
+	
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch posts"})
 		return
