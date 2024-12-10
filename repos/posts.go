@@ -2,25 +2,39 @@ package repos
 
 import (
 	"cvwo-backend/models"
+
+	"gorm.io/gorm"
 )
 
-var posts = []models.Post{
-	{ID: "1", Title: "What Could Have Been"},
-	{ID: "2", Title: "Goodbye"},
-	{ID: "3", Title: "The Glorious Evolution"},
+type PostRepo struct {
+	DB *gorm.DB
 }
 
-func GetPosts() []models.Post {
-	return posts
+func NewPostRepo(db *gorm.DB) *PostRepo {
+	return &PostRepo{DB: db}
 }
 
-func GetPostById(id string) models.Post {
-	// TODO: Find post by id
-	return posts[0]
+func (repo *PostRepo) GetAll() ([]models.Post, error) {
+	var posts []models.Post
+	err := repo.DB.Find(&posts).Error
+	if err != nil {
+		return nil, err
+	}
+	return posts, err
 }
 
-func CreatePost(postData models.Post) models.Post {
-	var newPost = models.Post{ID: "4", Title: "Oh the misery"}
-	posts = append(posts, newPost)
-	return newPost
+func (repo *PostRepo) GetByID(id string) (*models.Post, error) {
+	var post models.Post
+	err := repo.DB.First(&post, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &post, nil
+}
+
+func (repo *PostRepo) Create(post *models.Post) (*models.Post, error) {
+	if err := repo.DB.Create(post).Error; err != nil {
+		return nil, err
+	}
+	return post, nil
 }

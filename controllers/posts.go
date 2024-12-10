@@ -1,39 +1,56 @@
 package controllers
 
 import (
-	"net/http"
-	"github.com/gin-gonic/gin"
 	"cvwo-backend/models"
 	"cvwo-backend/services"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
-func GetPosts(ctx *gin.Context) {
-	posts := services.GetPosts()
+type PostController struct {
+	service services.PostService
+}
+
+func NewPostController(service services.PostService) *PostController {
+	return &PostController{service}
+}
+
+// GET /posts
+func (controller *PostController) GetAll(ctx *gin.Context) {
+	posts, err := controller.service.GetAll()
+	if err != nil {
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch posts"})
+		return
+	}
 	ctx.IndentedJSON(http.StatusOK, posts)
 }
 
-func GetPostByID(ctx *gin.Context) {
+// GET /posts/:id
+func (controller *PostController) GetByID(ctx *gin.Context) {
 	id := ctx.Param("id")
 
-	posts := services.GetPosts()
-	for _, post := range posts {
-		if post.ID == id {
-			ctx.IndentedJSON(http.StatusOK, post)
-			return
-		}
-	}
-	ctx.IndentedJSON(http.StatusNotFound, gin.H{"message": "post not found"})
-}
-
-func CreatePost(ctx *gin.Context) {
-	var postData models.Post
-
-	// TODO: Parse and validate post data
-	if err := ctx.BindJSON(&postData); err != nil {
+	post, err := controller.service.GetByID(id)
+	if err != nil {
+		ctx.IndentedJSON(http.StatusNotFound, gin.H{"message": "post not found"})
 		return
 	}
-	
-	newPost := services.CreatePost(postData)
-		
+	ctx.IndentedJSON(http.StatusOK, post)
+}
+
+func (controller *PostController) Create(ctx *gin.Context) {
+	var post models.Post
+
+	// TODO: Parse and validate post data
+	if err := ctx.BindJSON(&post); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid post data"})
+		return
+	}
+
+	newPost, err := controller.service.Create(&post)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create post"})
+	}
+
 	ctx.IndentedJSON(http.StatusCreated, newPost)
 }

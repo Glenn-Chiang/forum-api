@@ -5,15 +5,23 @@ import (
 	"cvwo-backend/repos"
 )
 
-func GetPosts() []models.Post {
-	return repos.GetPosts()
+type PostService struct {
+	repo repos.PostRepo
 }
 
-func GetPostByID(id string) models.Post {
-	return repos.GetPostById(id)
+func NewPostService(repo repos.PostRepo) *PostService {
+	return &PostService{repo}
 }
 
-func CreatePost(postData models.Post) models.Post {
+func (service *PostService) GetAll() ([]models.Post, error) {
+	return service.repo.GetAll()
+}
+
+func (service *PostService) GetByID(id string) (*models.Post, error) {
+	return service.repo.GetByID(id)
+}
+
+func (service *PostService) Create(postData *models.Post) (*models.Post, error) {
 	// TODO: Parse and validate the new post data
-	return repos.CreatePost(postData)
+	return service.repo.Create(postData)
 }

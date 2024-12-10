@@ -1,23 +1,37 @@
 package main
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 
 	"cvwo-backend/controllers"
 	"cvwo-backend/data"
+	"cvwo-backend/repos"
+	"cvwo-backend/services"
 )
 
 const databaseURI = "index.db"
 const serverUrl = "localhost:8080"
 
 func main() {
-	data.MustOpenDB(databaseURI)
+	// Initialize database
+	db := data.MustOpenDB(databaseURI)
 
+	if err := data.SeedData(db); err != nil {
+		log.Fatalf("Failed to seed database: %v", err)
+	}
+
+	// Initialize layers
+	postRepo := repos.NewPostRepo(db)
+	postService := services.NewPostService(*postRepo)
+	postController := controllers.NewPostController(*postService)
+
+	// Configure routes
 	router := gin.Default()
-	router.GET("/posts", controllers.GetPosts)
-	router.GET("/posts/:id", controllers.GetPostByID)
-	router.POST("/posts", controllers.CreatePost)
+	router.GET("/posts", postController.GetAll)
+	router.GET("/posts/:id", postController.GetByID)
+	router.POST("/posts", postController.Create)
 
 	router.Run(serverUrl)
 }
-

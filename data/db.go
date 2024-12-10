@@ -2,7 +2,6 @@ package data
 
 import (
 	"fmt"
-	"log"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -21,7 +20,7 @@ func OpenDB(dsn string) (*gorm.DB, error) {
 func MustOpenDB(dsn string) *gorm.DB {
 	db, err := OpenDB(dsn)
 	if err != nil {
-		log.Fatalf("Database connection failed: %v", err)
+		panic("failed to connect to database")
 	}
 	return db
 }
