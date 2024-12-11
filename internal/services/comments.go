@@ -3,34 +3,39 @@ package services
 import (
 	"cvwo-backend/internal/models"
 	"cvwo-backend/internal/repos"
+	"fmt"
 )
 
 type CommentService struct {
-	repo repos.CommentRepo
+	commentRepo repos.CommentRepo
+	userRepo repos.UserRepo
 }
 
-func NewCommentService(repo repos.CommentRepo) *CommentService {
-	return &CommentService{repo}
+func NewCommentService(commentRepo repos.CommentRepo, userRepo repos.UserRepo) *CommentService {
+	return &CommentService{commentRepo, userRepo}
 }
 
 func (service *CommentService) GetAll() ([]models.Comment, error) {
-	return service.repo.GetAll()
+	return service.commentRepo.GetAll()
 }
 
 func (service *CommentService) GetByID(id uint) (*models.Comment, error) {
-	return service.repo.GetByID(id)
+	return service.commentRepo.GetByID(id)
 }
 
 func (service *CommentService) GetByPostID(id uint) ([]models.Comment, error) {
-	return service.repo.GetByPostID(id)
+	return service.commentRepo.GetByPostID(id)
 }
 
-func (service *CommentService) Create(postData *models.Comment) (*models.Comment, error) {
-	// TODO: Parse and validate the new post data
-	return service.repo.Create(postData)
+func (service *CommentService) Create(commentData *models.Comment) (*models.Comment, error) {
+	// Check if authorID corresponds to an existing user
+	if _, err := service.userRepo.GetByID(commentData.AuthorID); err != nil {
+		return nil, fmt.Errorf("no author with ID %d", commentData.AuthorID)
+	}
+	return service.commentRepo.Create(commentData)
 }
 
 func (service *CommentService) Delete(id uint) error {
-	return service.repo.Delete(id)
+	return service.commentRepo.Delete(id)
 }
 

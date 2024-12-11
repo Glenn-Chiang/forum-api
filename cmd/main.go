@@ -34,7 +34,7 @@ func main() {
 
 	// Comments
 	commentRepo := repos.NewCommentRepo(db)
-	commentService := services.NewCommentService(*commentRepo)
+	commentService := services.NewCommentService(*commentRepo, *userRepo)
 	commentController := controllers.NewCommentController(*commentService)
 
 	// Topics

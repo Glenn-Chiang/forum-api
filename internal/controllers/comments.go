@@ -35,11 +35,18 @@ func (controller *CommentController) GetByPostID(ctx *gin.Context) {
 
 // POST /comments
 func (controller *CommentController) Create(ctx *gin.Context) {
-	var comment models.Comment
-
-	if err := ctx.ShouldBindJSON(&comment); err != nil {
+	// Validate request body
+	var requestBody models.CreateCommentRequest
+	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	// Map fields from request body to Comment model
+	comment := models.Comment{
+		Content: requestBody.Content,
+		PostID: requestBody.PostID,
+		AuthorID: requestBody.AuthorID,
 	}
 
 	newComment, err := controller.service.Create(&comment)
