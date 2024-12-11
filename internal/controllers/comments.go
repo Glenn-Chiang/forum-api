@@ -37,15 +37,14 @@ func (controller *CommentController) GetByPostID(ctx *gin.Context) {
 func (controller *CommentController) Create(ctx *gin.Context) {
 	var comment models.Comment
 
-	// TODO: Parse and validate comment data
-	if err := ctx.BindJSON(&comment); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid comment data"})
+	if err := ctx.ShouldBindJSON(&comment); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	newComment, err := controller.service.Create(&comment)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create comment"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 
 	ctx.IndentedJSON(http.StatusCreated, newComment)

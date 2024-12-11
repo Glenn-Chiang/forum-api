@@ -52,7 +52,7 @@ func (controller *PostController) GetByID(ctx *gin.Context) {
 
 	post, err := controller.service.GetByID(uint(id))
 	if err != nil {
-		ctx.IndentedJSON(http.StatusNotFound, gin.H{"error": "post not found"})
+		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 	ctx.IndentedJSON(http.StatusOK, post)
@@ -62,15 +62,14 @@ func (controller *PostController) GetByID(ctx *gin.Context) {
 func (controller *PostController) Create(ctx *gin.Context) {
 	var post models.Post
 
-	// TODO: Parse and validate post data
-	if err := ctx.BindJSON(&post); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid post data"})
+	if err := ctx.ShouldBindJSON(&post); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	newPost, err := controller.service.Create(&post)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create post"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 
 	ctx.IndentedJSON(http.StatusCreated, newPost)

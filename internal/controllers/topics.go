@@ -21,7 +21,7 @@ func NewTopicController(service services.TopicService) *TopicController {
 func (controller *TopicController) GetAll(ctx *gin.Context) {
 	topics, err := controller.service.GetAll()
 	if err != nil {
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch topics"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	ctx.IndentedJSON(http.StatusOK, topics)
@@ -31,15 +31,14 @@ func (controller *TopicController) GetAll(ctx *gin.Context) {
 func (controller *TopicController) Create(ctx *gin.Context) {
 	var topic models.Topic
 
-	// TODO: Parse and validate topic data
-	if err := ctx.BindJSON(&topic); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid topic data"})
+	if err := ctx.ShouldBindJSON(&topic); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	newTopic, err := controller.service.Create(&topic)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create topic"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 
 	ctx.IndentedJSON(http.StatusCreated, newTopic)

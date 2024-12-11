@@ -21,7 +21,7 @@ func NewUserController(service services.UserService) *UserController {
 func (controller *UserController) GetAll(ctx *gin.Context) {
 	users, err := controller.service.GetAll()
 	if err != nil {
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch users"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	ctx.IndentedJSON(http.StatusOK, users)
@@ -36,7 +36,7 @@ func (controller *UserController) GetByID(ctx *gin.Context) {
 
 	user, err := controller.service.GetByID(uint(id))
 	if err != nil {
-		ctx.IndentedJSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 	ctx.IndentedJSON(http.StatusOK, user)
@@ -46,15 +46,14 @@ func (controller *UserController) GetByID(ctx *gin.Context) {
 func (controller *UserController) Create(ctx *gin.Context) {
 	var user models.User
 
-	// TODO: Parse and validate user data
-	if err := ctx.BindJSON(&user); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid user data"})
+	if err := ctx.ShouldBindJSON(&user); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	newUser, err := controller.service.Create(&user)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create user"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 
 	ctx.IndentedJSON(http.StatusCreated, newUser)
