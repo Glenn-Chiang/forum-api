@@ -1,10 +1,13 @@
 package main
 
 import (
+	"log"
+	"os"
 	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 
 	"cvwo-backend/internal/controllers"
 	"cvwo-backend/internal/data"
@@ -13,13 +16,16 @@ import (
 	"cvwo-backend/internal/services"
 )
 
-const databaseURI = "index.db"
 const serverUrl = "localhost:8080"
 const clientUrl = "*"
 
 func main() {
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	// Initialize database
-	db := data.InitDB(databaseURI)
+	db := data.InitDB(os.Getenv("DB_URL"))
 
 	// Initialize feature layers
 	// Users
