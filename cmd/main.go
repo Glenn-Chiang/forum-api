@@ -29,7 +29,7 @@ func main() {
 
 	// Posts
 	postRepo := repos.NewPostRepo(db)
-	postService := services.NewPostService(*postRepo)
+	postService := services.NewPostService(*postRepo, *userRepo)
 	postController := controllers.NewPostController(*postService)
 
 	// Comments

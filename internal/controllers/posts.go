@@ -60,11 +60,18 @@ func (controller *PostController) GetByID(ctx *gin.Context) {
 
 // POST /posts
 func (controller *PostController) Create(ctx *gin.Context) {
-	var post models.Post
-
-	if err := ctx.ShouldBindJSON(&post); err != nil {
+	// Validate request body
+	var requestBody models.CreatePostRequest
+	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	// Map fields from request body to Post model
+	post := models.Post{
+		Title: requestBody.Title,
+		Content: requestBody.Content,
+		AuthorID: requestBody.AuthorID,
 	}
 
 	newPost, err := controller.service.Create(&post)

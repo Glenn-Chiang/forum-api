@@ -3,33 +3,38 @@ package services
 import (
 	"cvwo-backend/internal/models"
 	"cvwo-backend/internal/repos"
+	"fmt"
 )
 
 type PostService struct {
-	repo repos.PostRepo
+	postRepo repos.PostRepo
+	userRepo repos.UserRepo
 }
 
-func NewPostService(repo repos.PostRepo) *PostService {
-	return &PostService{repo}
+func NewPostService(postRepo repos.PostRepo, userRepo repos.UserRepo) *PostService {
+	return &PostService{postRepo, userRepo}
 }
 
 func (service *PostService) GetAll() ([]models.Post, error) {
-	return service.repo.GetAll()
+	return service.postRepo.GetAll()
 }
 
 func (service *PostService) GetByID(id uint) (*models.Post, error) {
-	return service.repo.GetByID(id)
+	return service.postRepo.GetByID(id)
 }
 
 func (service *PostService) GetByTopic(topicID uint) ([]models.Post, error) {
-	return service.repo.GetByTopic(topicID)
+	return service.postRepo.GetByTopic(topicID)
 }
 
 func (service *PostService) Create(postData *models.Post) (*models.Post, error) {
-	// TODO: Parse and validate the new post data
-	return service.repo.Create(postData)
+	// Check if authorID corresponds to an existing user
+	if _, err := service.userRepo.GetByID(postData.AuthorID); err != nil {
+		return nil, fmt.Errorf("no author with ID %d", postData.AuthorID)
+	}
+	return service.postRepo.Create(postData)
 }
 
 func (service *PostService) Delete(id uint) error {
-	return service.repo.Delete(id)
+	return service.postRepo.Delete(id)
 }
