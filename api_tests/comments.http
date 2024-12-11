@@ -8,5 +8,5 @@ Content-Type: application/json
 {
     "content": "glorious",
     "author_id": 10,
-    "post_id": 4
+    "post_id": 1
 }

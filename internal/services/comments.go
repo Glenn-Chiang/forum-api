@@ -3,6 +3,9 @@ package services
 import (
 	"cvwo-backend/internal/models"
 	"cvwo-backend/internal/repos"
+	"errors"
+
+	"gorm.io/gorm"
 )
 
 type CommentService struct {
@@ -29,16 +32,13 @@ func (service *CommentService) GetByPostID(id uint) ([]models.Comment, error) {
 
 // Create a new comment associated with a specific post and user
 func (service *CommentService) Create(commentData *models.Comment) (*models.Comment, error) {
-	// Check if postID corresponds to an existing post
-	if _, err := service.postRepo.GetByID(commentData.PostID); err != nil {
-		return nil, NewValidationError("post_id", "not found")
+	comment, err := service.commentRepo.Create(commentData)
+	if err != nil {
+		if errors.Is(err, gorm.ErrForeignKeyViolated) {
+			return nil, NewValidationError("post_id or author_id not found")
+		}
 	}
-
-	// Check if authorID corresponds to an existing user
-	if _, err := service.userRepo.GetByID(commentData.AuthorID); err != nil {
-		return nil, NewValidationError("author_id", "not found")
-	}
-	return service.commentRepo.Create(commentData)
+	return service.commentRepo.Create(comment)
 }
 
 // Update the content of the given comment

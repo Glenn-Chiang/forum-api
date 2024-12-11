@@ -52,7 +52,15 @@ func (controller *CommentController) Create(ctx *gin.Context) {
 	}
 
 	newComment, err := controller.service.Create(&comment)
+
 	if err != nil {
+		// Check if error is due to bad request
+		var validationErr *services.ValidationError
+		if errors.As(err, &validationErr) {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": validationErr.Error()})
+			return
+		}
+		// Otherwise return server error
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
