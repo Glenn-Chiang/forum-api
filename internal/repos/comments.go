@@ -23,27 +23,19 @@ func (repo *CommentRepo) GetAll() ([]models.Comment, error) {
 	return comments, nil
 }
 
-// Get all comments associated with given post
+// Get all comments associated with the given post. Each comment includes the associated author.
 func (repo *CommentRepo) GetByPostID(postId uint) ([]models.Comment, error) {
 	var comments []models.Comment
-	if err := repo.DB.Find(&comments, models.Comment{PostID: postId}).Error; err != nil {
+	if err := repo.DB.Preload("Author").Find(&comments, models.Comment{PostID: postId}).Error; err != nil {
 		return nil, err
 	}
 	return comments, nil
 }
 
-// Get all comments made by given user
-func (repo *CommentRepo) GetByUserID(userId uint) ([]models.Comment, error) {
-	var comments []models.Comment
-	if err := repo.DB.Find(&comments, models.Comment{AuthorID: userId}).Error; err != nil {
-		return nil, err
-	}
-	return comments, nil
-}
-
+// Get a particular comment including the associated author
 func (repo *CommentRepo) GetByID(id uint) (*models.Comment, error) {
 	var comment models.Comment
-	if err := repo.DB.First(&comment, id).Error; err != nil {
+	if err := repo.DB.Preload("Author").First(&comment, id).Error; err != nil {
 		return nil, err
 	}
 	return &comment, nil

@@ -23,9 +23,10 @@ func (repo *PostRepo) GetAll() ([]models.Post, error) {
 	return posts, nil
 }
 
+// Get a particular post including the associated author
 func (repo *PostRepo) GetByID(id uint) (*models.Post, error) {
 	var post models.Post
-	if err := repo.DB.First(&post, id).Error; err != nil {
+	if err := repo.DB.Preload("Author").First(&post, id).Error; err != nil {
 		return nil, err
 	}
 	return &post, nil

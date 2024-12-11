@@ -16,7 +16,7 @@ type Post struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	AuthorID uint `json:"author_id"`
-	Author User `gorm:"constraint:OnDelete:SET NULL;" json:"author"`
+	Author *User `gorm:"constraint:OnDelete:SET NULL;" json:"author,omitempty"`
 	Topics []*Topic `gorm:"many2many:post_topics" json:"topics"`
 }
 
@@ -26,7 +26,6 @@ type Comment struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	PostID uint `json:"postId"`
-	Post Post `gorm:"constraint:OnDelete:SET NULL;"`
 	AuthorID uint `json:"authorId"`
 	Author User `gorm:"constraint:OnDelete:SET NULL;" json:"author"`
 }
