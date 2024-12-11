@@ -3,6 +3,7 @@ package controllers
 import (
 	"cvwo-backend/internal/models"
 	"cvwo-backend/internal/services"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -54,6 +55,13 @@ func (controller *UserController) Create(ctx *gin.Context) {
 
 	newUser, err := controller.service.Create(&user)
 	if err != nil {
+		// Check if error is due to username already in use
+		var conflictErr *services.AlreadyInUseError
+		if errors.As(err, &conflictErr) {
+			ctx.JSON(http.StatusConflict, gin.H{"error": conflictErr.Error()})
+			return
+		}
+		// Otherwise return server error
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
