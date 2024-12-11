@@ -7,9 +7,9 @@ import (
 )
 
 func RegisterUserRoutes(router *gin.Engine, controller *controllers.UserController) {
-	router.GET("/posts", controller.GetAll)
-	router.GET("/posts/:id", controller.GetByID)
-	router.POST("/posts", controller.Create)
+	router.GET("/users", controller.GetAll)
+	router.GET("/users/:id", controller.GetByID)
+	router.POST("/users", controller.Create)
 }
 
 func RegisterPostRoutes(router *gin.Engine, controller *controllers.PostController) {
@@ -20,12 +20,13 @@ func RegisterPostRoutes(router *gin.Engine, controller *controllers.PostControll
 }
 
 func RegisterCommentRoutes(router *gin.Engine, controller *controllers.CommentController) {
-	router.POST("/posts", controller.Create)
-	router.DELETE("/posts/:id", controller.Delete)
+	router.GET("/posts/:id/comments", controller.GetByPostID)
+	router.POST("/comments", controller.Create)
+	router.DELETE("/comments/:id", controller.Delete)
 }
 
 func RegisterTopicRoutes(router *gin.Engine, controller *controllers.TopicController) {
-	router.GET("/posts", controller.GetAll)
-	router.POST("/posts", controller.Create)
-	router.DELETE("/posts/:id", controller.Delete)
+	router.GET("/topics", controller.GetAll)
+	router.POST("/topics", controller.Create)
+	router.DELETE("/topics/:id", controller.Delete)
 }

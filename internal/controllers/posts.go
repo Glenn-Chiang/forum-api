@@ -37,7 +37,7 @@ func (controller *PostController) GetAll(ctx *gin.Context) {
 	}
 	
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch posts"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	ctx.IndentedJSON(http.StatusOK, posts)
@@ -52,7 +52,7 @@ func (controller *PostController) GetByID(ctx *gin.Context) {
 
 	post, err := controller.service.GetByID(uint(id))
 	if err != nil {
-		ctx.IndentedJSON(http.StatusNotFound, gin.H{"message": "post not found"})
+		ctx.IndentedJSON(http.StatusNotFound, gin.H{"error": "post not found"})
 		return
 	}
 	ctx.IndentedJSON(http.StatusOK, post)

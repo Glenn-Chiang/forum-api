@@ -1,16 +1,13 @@
 package main
 
 import (
-	"log"
-
 	"github.com/gin-gonic/gin"
 
 	"cvwo-backend/internal/controllers"
 	"cvwo-backend/internal/data"
-	"cvwo-backend/internal/models"
 	"cvwo-backend/internal/repos"
-	"cvwo-backend/internal/services"
 	"cvwo-backend/internal/routes"
+	"cvwo-backend/internal/services"
 )
 
 const databaseURI = "index.db"
@@ -18,17 +15,7 @@ const serverUrl = "localhost:8080"
 
 func main() {
 	// Initialize database
-	db := data.MustOpenDB(databaseURI)
-
-	// Migrate schema
-	if err := db.AutoMigrate(&models.User{}, &models.Post{}, &models.Comment{}); err != nil {
-		log.Fatalf("Failed to migrate tables: %v", err)
-	}
-
-	// Seed database with initial data
-	if err := data.SeedData(db); err != nil {
-		log.Fatalf("Failed to seed database: %v", err)
-	}
+	db := data.InitDB(databaseURI)
 
 	// Initialize feature layers
 	// Users
