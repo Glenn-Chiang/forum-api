@@ -3,6 +3,7 @@ package controllers
 import (
 	"cvwo-backend/internal/models"
 	"cvwo-backend/internal/services"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -77,6 +78,13 @@ func (controller *PostController) Create(ctx *gin.Context) {
 
 	newPost, err := controller.service.Create(&post)
 	if err != nil {
+		// Check if error is due to bad request
+		var validationErr *services.ValidationError
+		if errors.As(err, &validationErr) {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": validationErr.Error()})
+			return
+		}
+		// Otherwise return server error
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

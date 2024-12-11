@@ -3,7 +3,6 @@ package services
 import (
 	"cvwo-backend/internal/models"
 	"cvwo-backend/internal/repos"
-	"fmt"
 )
 
 type CommentService struct {
@@ -32,12 +31,12 @@ func (service *CommentService) GetByPostID(id uint) ([]models.Comment, error) {
 func (service *CommentService) Create(commentData *models.Comment) (*models.Comment, error) {
 	// Check if postID corresponds to an existing post
 	if _, err := service.postRepo.GetByID(commentData.PostID); err != nil {
-		return nil, fmt.Errorf("no post with ID %d", commentData.PostID)
+		return nil, NewValidationError("post_id", "not found")
 	}
 
 	// Check if authorID corresponds to an existing user
 	if _, err := service.userRepo.GetByID(commentData.AuthorID); err != nil {
-		return nil, fmt.Errorf("no author with ID %d", commentData.AuthorID)
+		return nil, NewValidationError("author_id", "not found")
 	}
 	return service.commentRepo.Create(commentData)
 }

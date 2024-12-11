@@ -3,7 +3,6 @@ package services
 import (
 	"cvwo-backend/internal/models"
 	"cvwo-backend/internal/repos"
-	"fmt"
 )
 
 type PostService struct {
@@ -30,7 +29,7 @@ func (service *PostService) GetByTopic(topicID uint) ([]models.Post, error) {
 func (service *PostService) Create(postData *models.Post) (*models.Post, error) {
 	// Check if authorID corresponds to an existing user
 	if _, err := service.userRepo.GetByID(postData.AuthorID); err != nil {
-		return nil, fmt.Errorf("no author with ID %d", postData.AuthorID)
+		return nil, NewValidationError("author_id", "not found")
 	}
 	return service.postRepo.Create(postData)
 }
