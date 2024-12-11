@@ -1,6 +1,9 @@
 package main
 
 import (
+	"time"
+
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
 	"cvwo-backend/internal/controllers"
@@ -12,6 +15,7 @@ import (
 
 const databaseURI = "index.db"
 const serverUrl = "localhost:8080"
+const clientUrl = "*"
 
 func main() {
 	// Initialize database
@@ -41,6 +45,17 @@ func main() {
 	// Initialize router
 	router := gin.Default()
 
+	// CORS middleware
+	router.Use(cors.New(cors.Config{
+		AllowOrigins: []string{clientUrl},
+		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
+		AllowHeaders: []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders: []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge: 12 * time.Hour,
+	}))
+
+	// Register route handlers
 	routes.RegisterUserRoutes(router, userController)
 	routes.RegisterPostRoutes(router, postController)
 	routes.RegisterCommentRoutes(router, commentController)
