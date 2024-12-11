@@ -27,6 +27,12 @@ type CreatePostRequest struct {
 	AuthorID uint `json:"author_id" binding:"required"`
 }
 
+// Structure of request body for updating a post
+type UpdatePostRequest struct {
+	Title string `json:"title" binding:"required"`
+	Content string `json:"content" binding:"required,min=10"`
+}
+
 type Comment struct {
 	ID uint `json:"id"`
 	Content string `json:"content"`
@@ -42,6 +48,11 @@ type CreateCommentRequest struct {
 	Content string `json:"content" binding:"required"`
 	PostID uint `json:"postId"`
 	AuthorID uint `json:"authorId" binding:"required"`
+}
+
+// Structure of request body for updating a comment
+type UpdateCommentRequest struct {
+	Content string `json:"content" binding:"required"`
 }
 
 type Topic struct {

@@ -35,6 +35,11 @@ func (service *CommentService) Create(commentData *models.Comment) (*models.Comm
 	return service.commentRepo.Create(commentData)
 }
 
+// Update the content of the given comment
+func (service *CommentService) Update(id uint, content string) (*models.Comment, error) {
+	return service.commentRepo.Update(id, content)
+}
+
 func (service *CommentService) Delete(id uint) error {
 	return service.commentRepo.Delete(id)
 }

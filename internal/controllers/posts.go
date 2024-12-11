@@ -82,8 +82,32 @@ func (controller *PostController) Create(ctx *gin.Context) {
 	ctx.IndentedJSON(http.StatusCreated, newPost)
 }
 
+// PATCH /posts/:id
+func (controller *PostController) Update(ctx *gin.Context) {
+	// Validate postID
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid post ID"})		
+	}
+
+	// Validate request body
+	var requestBody models.UpdatePostRequest
+	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	updatedPost, err := controller.service.Update(uint(id), requestBody.Title, requestBody.Content)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+
+	ctx.IndentedJSON(http.StatusOK, updatedPost)
+}
+
 // DELETE /posts/:id
 func (controller *PostController) Delete(ctx *gin.Context) {
+	// Validate postID
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid post ID"})		

@@ -16,12 +16,14 @@ func RegisterPostRoutes(router *gin.Engine, controller *controllers.PostControll
 	router.GET("/posts", controller.GetAll)
 	router.GET("/posts/:id", controller.GetByID)
 	router.POST("/posts", controller.Create)
+	router.PATCH("/posts/:id", controller.Update)
 	router.DELETE("/posts/:id", controller.Delete)
 }
 
 func RegisterCommentRoutes(router *gin.Engine, controller *controllers.CommentController) {
 	router.GET("/posts/:id/comments", controller.GetByPostID)
 	router.POST("/comments", controller.Create)
+	router.PATCH("/comments/:id", controller.Update)
 	router.DELETE("/comments/:id", controller.Delete)
 }
 

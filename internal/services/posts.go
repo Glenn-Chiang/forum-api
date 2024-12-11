@@ -35,6 +35,11 @@ func (service *PostService) Create(postData *models.Post) (*models.Post, error) 
 	return service.postRepo.Create(postData)
 }
 
+// Update the title and content of the given post
+func (service *PostService) Update(id uint, title string, content string) (*models.Post, error) {
+	return service.postRepo.Update(id, title, content)
+}
+
 func (service *PostService) Delete(id uint) error {
 	return service.postRepo.Delete(id)
 }

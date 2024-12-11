@@ -57,8 +57,33 @@ func (controller *CommentController) Create(ctx *gin.Context) {
 	ctx.IndentedJSON(http.StatusCreated, newComment)
 }
 
+// PATCH /comments/:id
+func (controller *CommentController) Update(ctx *gin.Context) {
+	// Validate commentID
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid comment ID"})		
+	}
+
+	// Validate request body
+	var requestBody models.UpdateCommentRequest
+	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	updatedComment, err := controller.service.Update(uint(id), requestBody.Content)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.IndentedJSON(http.StatusOK, updatedComment)
+}
+
 // DELETE /comments/:id
 func (controller *CommentController) Delete(ctx *gin.Context) {
+	// Validate commentID
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid comment ID"})		
