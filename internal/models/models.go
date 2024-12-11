@@ -38,16 +38,16 @@ type Comment struct {
 	Content string `json:"content"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-	PostID uint `json:"postId"`
-	AuthorID uint `json:"authorId"`
-	Author User `gorm:"constraint:OnDelete:SET NULL;" json:"author"`
+	PostID uint `json:"post_id"`
+	AuthorID uint `json:"author_id"`
+	Author User `gorm:"constraint:OnDelete:SET NULL;" json:"author,omitempty"`
 }
 
 // Structure of request body for creating a new comment
 type CreateCommentRequest struct {
 	Content string `json:"content" binding:"required"`
-	PostID uint `json:"postId"`
-	AuthorID uint `json:"authorId" binding:"required"`
+	PostID uint `json:"post_id" binding:"required"`
+	AuthorID uint `json:"author_id" binding:"required"`
 }
 
 // Structure of request body for updating a comment
