@@ -10,6 +10,7 @@ import (
 	"cvwo-backend/internal/models"
 	"cvwo-backend/internal/repos"
 	"cvwo-backend/internal/services"
+	"cvwo-backend/internal/routes"
 )
 
 const databaseURI = "index.db"
@@ -53,28 +54,10 @@ func main() {
 	// Initialize router
 	router := gin.Default()
 
-	// Configure routes
-
-	// Posts
-	router.GET("/posts", postController.GetAll)
-	router.GET("/posts/:id", postController.GetByID)
-	router.POST("/posts", postController.Create)
-	router.DELETE("/posts/:id", postController.Delete)
-
-	// Users
-	router.GET("/users", userController.GetAll)
-	router.GET("/users/:id", userController.GetByID)
-	router.POST("/users", userController.Create)
-
-	// Comments
-	router.GET("/posts/:id/comments", commentController.GetByPostID)
-	router.POST("/comments", commentController.Create)
-	router.DELETE("/comments/:id", commentController.Delete)
-
-	// Topics
-	router.GET("/topics", topicController.GetAll)
-	router.POST("/topics", topicController.Create)
-	router.DELETE("/topics/:id", topicController.Delete)
+	routes.RegisterUserRoutes(router, userController)
+	routes.RegisterPostRoutes(router, postController)
+	routes.RegisterCommentRoutes(router, commentController)
+	routes.RegisterTopicRoutes(router, topicController)
 
 	router.Run(serverUrl)
 }
