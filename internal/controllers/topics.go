@@ -39,6 +39,7 @@ func (controller *TopicController) Create(ctx *gin.Context) {
 	newTopic, err := controller.service.Create(&topic)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
 	ctx.IndentedJSON(http.StatusCreated, newTopic)
@@ -49,9 +50,10 @@ func (controller *TopicController) Delete(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid topic ID"})		
+		return
 	}
 
-	if controller.service.Delete(uint(id)); err != nil {
+	if err:= controller.service.Delete(uint(id)); err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}

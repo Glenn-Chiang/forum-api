@@ -32,6 +32,7 @@ func (controller *UserController) GetByID(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
+		return
 	}
 
 	user, err := controller.service.GetByID(uint(id))
@@ -54,6 +55,7 @@ func (controller *UserController) Create(ctx *gin.Context) {
 	newUser, err := controller.service.Create(&user)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
 	ctx.IndentedJSON(http.StatusCreated, newUser)

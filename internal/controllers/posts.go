@@ -48,6 +48,7 @@ func (controller *PostController) GetByID(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid post ID"})
+		return
 	}
 
 	post, err := controller.service.GetByID(uint(id))
@@ -77,6 +78,7 @@ func (controller *PostController) Create(ctx *gin.Context) {
 	newPost, err := controller.service.Create(&post)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
 	ctx.IndentedJSON(http.StatusCreated, newPost)
@@ -87,7 +89,8 @@ func (controller *PostController) Update(ctx *gin.Context) {
 	// Validate postID
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid post ID"})		
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid post ID"})
+		return		
 	}
 
 	// Validate request body
@@ -100,6 +103,7 @@ func (controller *PostController) Update(ctx *gin.Context) {
 	updatedPost, err := controller.service.Update(uint(id), requestBody.Title, requestBody.Content)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
 	ctx.IndentedJSON(http.StatusOK, updatedPost)
@@ -110,10 +114,11 @@ func (controller *PostController) Delete(ctx *gin.Context) {
 	// Validate postID
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid post ID"})		
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid post ID"})
+		return
 	}
 
-	if controller.service.Delete(uint(id)); err != nil {
+	if err := controller.service.Delete(uint(id)); err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}

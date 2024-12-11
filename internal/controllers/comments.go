@@ -22,6 +22,7 @@ func (controller *CommentController) GetByPostID(ctx *gin.Context) {
 	postId, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid post ID"})
+		return
 	}
 
 	comments, err := controller.service.GetByPostID(uint(postId))
@@ -52,6 +53,7 @@ func (controller *CommentController) Create(ctx *gin.Context) {
 	newComment, err := controller.service.Create(&comment)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
 	ctx.IndentedJSON(http.StatusCreated, newComment)
@@ -62,7 +64,8 @@ func (controller *CommentController) Update(ctx *gin.Context) {
 	// Validate commentID
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid comment ID"})		
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid comment ID"})
+		return	
 	}
 
 	// Validate request body
@@ -86,10 +89,11 @@ func (controller *CommentController) Delete(ctx *gin.Context) {
 	// Validate commentID
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid comment ID"})		
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid comment ID"})
+		return	
 	}
 
-	if controller.service.Delete(uint(id)); err != nil {
+	if err:= controller.service.Delete(uint(id)); err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
