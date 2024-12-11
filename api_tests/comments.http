@@ -1,0 +1,12 @@
+### Get all comments under the specified post
+GET {{baseUrl}}/posts/4/comments
+
+### Create comment
+POST {{baseUrl}}/comments
+Content-Type: application/json
+
+{
+    "content": "glorious",
+    "author_id": 1,
+    "post_id": 4
+}
