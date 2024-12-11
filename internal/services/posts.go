@@ -3,6 +3,9 @@ package services
 import (
 	"cvwo-backend/internal/models"
 	"cvwo-backend/internal/repos"
+	"errors"
+
+	"gorm.io/gorm"
 )
 
 type PostService struct {
@@ -27,11 +30,14 @@ func (service *PostService) GetByTopic(topicID uint) ([]models.Post, error) {
 }
 
 func (service *PostService) Create(postData *models.Post) (*models.Post, error) {
-	// Check if authorID corresponds to an existing user
-	if _, err := service.userRepo.GetByID(postData.AuthorID); err != nil {
-		return nil, NewValidationError("author_id", "not found")
+	post, err := service.postRepo.Create(postData)
+	if err != nil {
+		if errors.Is(err, gorm.ErrForeignKeyViolated) {
+			return nil, NewValidationError("author_id", "not found")
+		}
+		return nil, err
 	}
-	return service.postRepo.Create(postData)
+	return post, nil
 }
 
 // Update the title and content of the given post
