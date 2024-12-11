@@ -36,7 +36,7 @@ func (controller *UserController) GetByID(ctx *gin.Context) {
 
 	user, err := controller.service.GetByID(uint(id))
 	if err != nil {
-		ctx.IndentedJSON(http.StatusNotFound, gin.H{"message": "user not found"})
+		ctx.IndentedJSON(http.StatusNotFound, gin.H{"error": "user not found"})
 		return
 	}
 	ctx.IndentedJSON(http.StatusOK, user)

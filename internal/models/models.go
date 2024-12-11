@@ -1,28 +1,34 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"time"
+)
 
 type User struct {
-	gorm.Model
+	ID uint `json:"id"`
 	Username string `gorm:"uniqueIndex" json:"username"`
 }
 
 type Post struct {
-	gorm.Model
+	ID uint `json:"id"`
 	Title string `json:"title"`
 	Content string `json:"content"`
-	AuthorID uint `json:"authorId"`
-	Author User `gorm:"constraint:OnDelete:SET NULL;"`
-	Topics []*Topic `gorm:"many2many:post_topics"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	AuthorID uint `json:"author_id"`
+	Author User `gorm:"constraint:OnDelete:SET NULL;" json:"author"`
+	Topics []*Topic `gorm:"many2many:post_topics" json:"topics"`
 }
 
 type Comment struct {
-	gorm.Model
+	ID uint `json:"id"`
 	Content string `json:"content"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 	PostID uint `json:"postId"`
 	Post Post `gorm:"constraint:OnDelete:SET NULL;"`
 	AuthorID uint `json:"authorId"`
-	Author User `gorm:"constraint:OnDelete:SET NULL;"`
+	Author User `gorm:"constraint:OnDelete:SET NULL;" json:"author"`
 }
 
 type Topic struct {
