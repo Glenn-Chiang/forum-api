@@ -1,0 +1,16 @@
+### Get all posts
+GET {{baseUrl}}/posts
+
+### Get post by ID
+# @prompt id
+GET {{baseUrl}}/posts/{{id}}
+
+### Create post
+POST {{baseUrl}}/posts
+Content-Type: application/json
+
+{
+    "title": "viktor nation",
+    "content": "how we feeling",
+    "author_id": 1
+}
