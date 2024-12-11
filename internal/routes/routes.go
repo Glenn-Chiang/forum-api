@@ -12,6 +12,10 @@ func RegisterUserRoutes(router *gin.Engine, controller *controllers.UserControll
 	router.POST("/users", controller.Create)
 }
 
+func RegisterAuthRoutes(router *gin.Engine, controller *controllers.AuthController) {
+	router.GET("/login", controller.Login)
+}
+
 func RegisterPostRoutes(router *gin.Engine, controller *controllers.PostController) {
 	router.GET("/posts", controller.GetAll)
 	router.GET("/posts/:id", controller.GetByID)

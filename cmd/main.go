@@ -32,21 +32,25 @@ func main() {
 	userRepo := repos.NewUserRepo(db)
 	userService := services.NewUserService(*userRepo)
 	userController := controllers.NewUserController(*userService)
-
+	
 	// Posts
 	postRepo := repos.NewPostRepo(db)
 	postService := services.NewPostService(*postRepo, *userRepo)
 	postController := controllers.NewPostController(*postService)
-
+	
 	// Comments
 	commentRepo := repos.NewCommentRepo(db)
 	commentService := services.NewCommentService(*commentRepo, *postRepo, *userRepo)
 	commentController := controllers.NewCommentController(*commentService)
-
+	
 	// Topics
 	topicRepo := repos.NewTopicRepo(db)
 	topicService := services.NewTopicService(*topicRepo)
 	topicController := controllers.NewTopicController(*topicService)
+
+	// Auth
+	authService := services.NewAuthService(userService)
+	authController := controllers.NewAuthController(authService)
 
 	// Initialize router
 	router := gin.Default()
@@ -66,6 +70,7 @@ func main() {
 	routes.RegisterPostRoutes(router, postController)
 	routes.RegisterCommentRoutes(router, commentController)
 	routes.RegisterTopicRoutes(router, topicController)
+	routes.RegisterAuthRoutes(router, authController)
 
 	router.Run(serverUrl)
 }
