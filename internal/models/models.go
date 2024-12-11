@@ -1,12 +1,16 @@
 package models
 
-import (
-	"time"
-)
+import "time"
 
 type User struct {
 	ID uint `json:"id"`
+	Username string `gorm:"uniqueIndex" json:"username"`
+	Password string // Hashed password, not actual
+}
+
+type AuthInput struct {
 	Username string `gorm:"uniqueIndex" json:"username" binding:"required"`
+	Password string `binding:"required"`
 }
 
 type Post struct {

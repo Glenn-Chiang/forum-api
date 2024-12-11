@@ -24,8 +24,19 @@ func (service *UserService) GetByID(id uint) (*models.User, error) {
 	return service.repo.GetByID(id)
 }
 
-func (service *UserService) Create(userData *models.User) (*models.User, error) {
-	user, err := service.repo.Create(userData)
+func (service *UserService) Create(userData *models.AuthInput) (*models.User, error) {
+	// Hash password
+	passwordHash, err := HashPassword(userData.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := service.repo.Create(&models.User{
+		Username: userData.Username,
+		Password: passwordHash, // Create user using hashed password
+	})
+
+	// Check if username is already in use
 	if err != nil {
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
 			return nil, NewAlreadyInUseError("username")
@@ -38,4 +49,3 @@ func (service *UserService) Create(userData *models.User) (*models.User, error) 
 func (service *UserService) Delete(id uint) error {
 	return service.repo.Delete(id)
 }
-

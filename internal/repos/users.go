@@ -31,6 +31,15 @@ func (repo *UserRepo) GetByID(id uint) (*models.User, error) {
 	return &user, nil
 }
 
+// Get a single user by username
+func (repo *UserRepo) GetByUsername(username string) (*models.User, error) {
+	var user models.User
+	if err := repo.DB.Where("username=?", username).Find(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (repo *UserRepo) Create(user *models.User) (*models.User, error) {
 	if err := repo.DB.Create(user).Error; err != nil {
 		return nil, err

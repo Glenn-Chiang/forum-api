@@ -46,7 +46,7 @@ func (controller *UserController) GetByID(ctx *gin.Context) {
 
 // POST /users
 func (controller *UserController) Create(ctx *gin.Context) {
-	var user models.User
+	var user models.AuthInput
 
 	if err := ctx.ShouldBindJSON(&user); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -68,4 +68,3 @@ func (controller *UserController) Create(ctx *gin.Context) {
 
 	ctx.IndentedJSON(http.StatusCreated, newUser)
 }
-
