@@ -2,6 +2,8 @@ package services
 
 import (
 	"cvwo-backend/internal/models"
+
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -83,10 +85,15 @@ func (service *AuthService) ValidateToken(tokenString string) (*models.User, err
 	if err != nil {
 		return nil, NewUnauthorizedError("invalid user id")
 	}
-	
+
 	// Retrieve the user whose ID corresponds to the token ID
 	user, err := service.userService.GetByID(uint(userId))
 	if err != nil {
+		// If no user corresponds to given ID, return unauthorized error
+		var notFoundErr *NotFoundError
+		if errors.As(err, &notFoundErr) {
+			return nil, NewUnauthorizedError("invalid user id")
+		}
 		return nil, err
 	}
 
