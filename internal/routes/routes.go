@@ -2,37 +2,38 @@ package routes
 
 import (
 	"cvwo-backend/internal/controllers"
+	"cvwo-backend/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterUserRoutes(router *gin.Engine, controller *controllers.UserController) {
+func RegisterUserRoutes(router *gin.Engine, auth *middleware.AuthMiddleware, controller *controllers.UserController) {
 	router.GET("/users", controller.GetAll)
 	router.GET("/users/:id", controller.GetByID)
-	router.POST("/users", controller.Create)
+	router.POST("/users", auth.CheckAuth, controller.Create)
 }
 
 func RegisterAuthRoutes(router *gin.Engine, controller *controllers.AuthController) {
 	router.GET("/login", controller.Login)
 }
 
-func RegisterPostRoutes(router *gin.Engine, controller *controllers.PostController) {
+func RegisterPostRoutes(router *gin.Engine, auth *middleware.AuthMiddleware, controller *controllers.PostController) {
 	router.GET("/posts", controller.GetAll)
 	router.GET("/posts/:id", controller.GetByID)
-	router.POST("/posts", controller.Create)
-	router.PATCH("/posts/:id", controller.Update)
-	router.DELETE("/posts/:id", controller.Delete)
+	router.POST("/posts", auth.CheckAuth, controller.Create)
+	router.PATCH("/posts/:id", auth.CheckAuth, controller.Update)
+	router.DELETE("/posts/:id", auth.CheckAuth, controller.Delete)
 }
 
-func RegisterCommentRoutes(router *gin.Engine, controller *controllers.CommentController) {
+func RegisterCommentRoutes(router *gin.Engine, auth *middleware.AuthMiddleware, controller *controllers.CommentController) {
 	router.GET("/posts/:id/comments", controller.GetByPostID)
-	router.POST("/comments", controller.Create)
-	router.PATCH("/comments/:id", controller.Update)
-	router.DELETE("/comments/:id", controller.Delete)
+	router.POST("/comments", auth.CheckAuth, controller.Create)
+	router.PATCH("/comments/:id", auth.CheckAuth, controller.Update)
+	router.DELETE("/comments/:id", auth.CheckAuth, controller.Delete)
 }
 
-func RegisterTopicRoutes(router *gin.Engine, controller *controllers.TopicController) {
+func RegisterTopicRoutes(router *gin.Engine, auth *middleware.AuthMiddleware, controller *controllers.TopicController) {
 	router.GET("/topics", controller.GetAll)
-	router.POST("/topics", controller.Create)
-	router.DELETE("/topics/:id", controller.Delete)
+	router.POST("/topics", auth.CheckAuth, controller.Create)
+	router.DELETE("/topics/:id", auth.CheckAuth, controller.Delete)
 }

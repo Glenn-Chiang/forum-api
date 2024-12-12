@@ -11,6 +11,7 @@ import (
 
 	"cvwo-backend/internal/controllers"
 	"cvwo-backend/internal/data"
+	"cvwo-backend/internal/middleware"
 	"cvwo-backend/internal/repos"
 	"cvwo-backend/internal/routes"
 	"cvwo-backend/internal/services"
@@ -48,9 +49,10 @@ func main() {
 	topicService := services.NewTopicService(*topicRepo)
 	topicController := controllers.NewTopicController(*topicService)
 
-	// Auth
+	// Authentication
 	authService := services.NewAuthService(userService)
 	authController := controllers.NewAuthController(authService)
+	authMiddleware := middleware.NewAuthMiddleware(authService)
 
 	// Initialize router
 	router := gin.Default()
@@ -66,10 +68,10 @@ func main() {
 	}))
 
 	// Register route handlers
-	routes.RegisterUserRoutes(router, userController)
-	routes.RegisterPostRoutes(router, postController)
-	routes.RegisterCommentRoutes(router, commentController)
-	routes.RegisterTopicRoutes(router, topicController)
+	routes.RegisterUserRoutes(router, authMiddleware, userController)
+	routes.RegisterPostRoutes(router, authMiddleware, postController)
+	routes.RegisterCommentRoutes(router, authMiddleware, commentController)
+	routes.RegisterTopicRoutes(router, authMiddleware, topicController)
 	routes.RegisterAuthRoutes(router, authController)
 
 	router.Run(serverUrl)
