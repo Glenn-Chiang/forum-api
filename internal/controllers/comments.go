@@ -86,15 +86,16 @@ func (controller *CommentController) Update(ctx *gin.Context) {
 
 	updatedComment, err := controller.service.Update(uint(id), requestBody.Content)
 	
+	// Handle different error cases
 	if err != nil {
-		// Check if error is due to bad request
-		var validationErr *services.ValidationError
-		if errors.As(err, &validationErr) {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": validationErr.Error()})
-			return
+		switch e := err.(type) {
+		case *services.NotFoundError:
+			ctx.JSON(http.StatusNotFound, gin.H{"error": e.Error()})
+		case *services.ValidationError:
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": e.Error()})
+		default:
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
-		// Otherwise return server error
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

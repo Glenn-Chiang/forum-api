@@ -78,7 +78,7 @@ func (controller *PostController) Create(ctx *gin.Context) {
 
 	newPost, err := controller.service.Create(&post)
 	if err != nil {
-		// Check if error is due to bad request
+		// Check if error is due to invalid request
 		var validationErr *services.ValidationError
 		if errors.As(err, &validationErr) {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": validationErr.Error()})
@@ -109,8 +109,17 @@ func (controller *PostController) Update(ctx *gin.Context) {
 	}
 
 	updatedPost, err := controller.service.Update(uint(id), requestBody.Title, requestBody.Content)
+	
+	// Handle different error cases
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		switch e := err.(type) {
+		case *services.NotFoundError:
+			ctx.JSON(http.StatusNotFound, gin.H{"error": e.Error()})
+		case *services.ValidationError:
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": e.Error()})
+		default:
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
 		return
 	}
 
