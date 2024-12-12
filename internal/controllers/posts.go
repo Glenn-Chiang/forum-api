@@ -92,14 +92,14 @@ func (controller *PostController) Create(ctx *gin.Context) {
 	}
 
 	newPost, err := controller.service.Create(&post)
+
+	// Handle errors
 	if err != nil {
-		// Check if error is due to invalid request
-		var validationErr *services.ValidationError
-		if errors.As(err, &validationErr) {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": validationErr.Error()})
+		var notFoundErr *services.NotFoundError
+		if errors.As(err, &notFoundErr) {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": notFoundErr.Error()})
 			return
 		}
-		// Otherwise return server error
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -140,16 +140,14 @@ func (controller *PostController) Update(ctx *gin.Context) {
 
 	updatedPost, err := controller.service.Update(uint(id), requestBody.Title, requestBody.Content)
 	
-	// Handle different error cases
+	// Handle errors
 	if err != nil {
-		switch e := err.(type) {
-		case *services.NotFoundError:
-			ctx.JSON(http.StatusNotFound, gin.H{"error": e.Error()})
-		case *services.ValidationError:
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": e.Error()})
-		default:
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		var notFoundErr *services.NotFoundError
+		if errors.As(err, &notFoundErr) {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": notFoundErr.Error()})
+			return
 		}
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
