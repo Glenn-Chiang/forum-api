@@ -44,6 +44,21 @@ func (controller *CommentController) Create(ctx *gin.Context) {
 		return
 	}
 
+	// Retrieve the authenticated user from context
+	user, exists := ctx.Get("user") 
+	// This should not happen as middleware already checks for valid user
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	// Check that the authorID of the comment corresponds to the currently authenticated user's ID
+	userID := user.(*models.User).ID
+	if userID != requestBody.AuthorID {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	// Map fields from request body to Comment model
 	comment := models.Comment{
 		Content: requestBody.Content,
@@ -75,6 +90,21 @@ func (controller *CommentController) Update(ctx *gin.Context) {
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid comment ID"})
 		return	
+	}
+
+	// Retrieve the authenticated user from context
+	user, exists := ctx.Get("user") 
+	// This should not happen as middleware already checks for valid user
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	// Check that the authorID of the comment corresponds to the currently authenticated user's ID
+	userID := user.(*models.User).ID
+	if userID != uint(id) {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
 	}
 
 	// Validate request body
@@ -109,6 +139,21 @@ func (controller *CommentController) Delete(ctx *gin.Context) {
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid comment ID"})
 		return	
+	}
+
+	// Retrieve the authenticated user from context
+	user, exists := ctx.Get("user") 
+	// This should not happen as middleware already checks for valid user
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	// Check that the authorID of the comment corresponds to the currently authenticated user's ID
+	userID := user.(*models.User).ID
+	if userID != uint(id) {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
 	}
 
 	if err:= controller.service.Delete(uint(id)); err != nil {

@@ -35,7 +35,7 @@ func (service *CommentService) Create(commentData *models.Comment) (*models.Comm
 	comment, err := service.commentRepo.Create(commentData)
 	if err != nil {
 		if errors.Is(err, gorm.ErrForeignKeyViolated) {
-			return nil, NewValidationError("post_id or author_id not found")
+			return nil, NewNotFoundError("post_id or author_id")
 		}
 	}
 	return service.commentRepo.Create(comment)

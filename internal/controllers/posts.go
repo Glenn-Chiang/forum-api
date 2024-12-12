@@ -69,6 +69,21 @@ func (controller *PostController) Create(ctx *gin.Context) {
 		return
 	}
 
+	// Retrieve the authenticated user from context
+	user, exists := ctx.Get("user") 
+	// This should not happen as middleware already checks for valid user
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	// Check that the authorID of the post corresponds to the currently authenticated user's ID
+	userID := user.(*models.User).ID
+	if userID != requestBody.AuthorID {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	// Map fields from request body to Post model
 	post := models.Post{
 		Title: requestBody.Title,
@@ -108,6 +123,21 @@ func (controller *PostController) Update(ctx *gin.Context) {
 		return
 	}
 
+	// Retrieve the authenticated user from context
+	user, exists := ctx.Get("user") 
+	// This should not happen as middleware already checks for valid user
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	// Check that the post ID corresponds to the currently authenticated user's ID
+	userID := user.(*models.User).ID
+	if userID != uint(id) {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	updatedPost, err := controller.service.Update(uint(id), requestBody.Title, requestBody.Content)
 	
 	// Handle different error cases
@@ -132,6 +162,21 @@ func (controller *PostController) Delete(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid post ID"})
+		return
+	}
+
+	// Retrieve the authenticated user from context
+	user, exists := ctx.Get("user") 
+	// This should not happen as middleware already checks for valid user
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	// Check that the authorID of the post corresponds to the currently authenticated user's ID
+	userID := user.(*models.User).ID
+	if userID != uint(id) {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 

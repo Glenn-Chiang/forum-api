@@ -33,7 +33,7 @@ func (service *PostService) Create(postData *models.Post) (*models.Post, error) 
 	post, err := service.postRepo.Create(postData)
 	if err != nil {
 		if errors.Is(err, gorm.ErrForeignKeyViolated) {
-			return nil, NewValidationError("author_id not found")
+			return nil, NewNotFoundError("author_id")
 		}
 		return nil, err
 	}
