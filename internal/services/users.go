@@ -21,7 +21,13 @@ func (service *UserService) GetAll() ([]models.User, error) {
 }
 
 func (service *UserService) GetByID(id uint) (*models.User, error) {
-	return service.repo.GetByID(id)
+	user, err := service.repo.GetByID(id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, NewNotFoundError("user")
+		}
+	}
+	return user, nil
 }
 
 func (service *UserService) Create(userData *models.AuthInput) (*models.User, error) {

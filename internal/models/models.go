@@ -5,7 +5,7 @@ import "time"
 type User struct {
 	ID uint `json:"id"`
 	Username string `gorm:"uniqueIndex" json:"username"`
-	Password string // Hashed password, not actual
+	Password string `json:"-"`// Hashed password, excluded from JSON
 }
 
 type AuthInput struct {

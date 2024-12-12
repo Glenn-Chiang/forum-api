@@ -2,6 +2,18 @@ package services
 
 import "fmt"
 
+type NotFoundError struct {
+	Name string 
+}
+
+func (err *NotFoundError) Error() string {
+	return fmt.Sprintf("%s not found", err.Name)
+}
+
+func NewNotFoundError(name string) *NotFoundError {
+	return &NotFoundError{Name: name}
+}
+
 type ValidationError struct {
 	Message string
 }
