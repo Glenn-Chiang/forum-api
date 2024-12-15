@@ -12,5 +12,5 @@ Content-Type: application/json
 {
     "title": "viktor nation",
     "content": "how we feeling",
-    "author_id": 10
+    "author_id": 1
 }

@@ -36,7 +36,7 @@ func (controller *PostController) GetAll(ctx *gin.Context) {
 	} else { // If no topicId is specified
 		posts, err = controller.service.GetAll()
 	}
-	
+
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -63,14 +63,14 @@ func (controller *PostController) GetByID(ctx *gin.Context) {
 // POST /posts
 func (controller *PostController) Create(ctx *gin.Context) {
 	// Validate request body
-	var requestBody models.CreatePostRequest
+	var requestBody models.NewPost
 	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Retrieve the authenticated user from context
-	user, exists := ctx.Get("user") 
+	user, exists := ctx.Get("user")
 	// This should not happen as middleware already checks for valid user
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -86,8 +86,8 @@ func (controller *PostController) Create(ctx *gin.Context) {
 
 	// Map fields from request body to Post model
 	post := models.Post{
-		Title: requestBody.Title,
-		Content: requestBody.Content,
+		Title:    requestBody.Title,
+		Content:  requestBody.Content,
 		AuthorID: requestBody.AuthorID,
 	}
 
@@ -113,18 +113,18 @@ func (controller *PostController) Update(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid post ID"})
-		return		
+		return
 	}
 
 	// Validate request body
-	var requestBody models.UpdatePostRequest
+	var requestBody models.UpdatePostData
 	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Retrieve the authenticated user from context
-	user, exists := ctx.Get("user") 
+	user, exists := ctx.Get("user")
 	// This should not happen as middleware already checks for valid user
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -139,7 +139,7 @@ func (controller *PostController) Update(ctx *gin.Context) {
 	}
 
 	updatedPost, err := controller.service.Update(uint(id), requestBody.Title, requestBody.Content)
-	
+
 	// Handle errors
 	if err != nil {
 		var notFoundErr *services.NotFoundError
@@ -164,7 +164,7 @@ func (controller *PostController) Delete(ctx *gin.Context) {
 	}
 
 	// Retrieve the authenticated user from context
-	user, exists := ctx.Get("user") 
+	user, exists := ctx.Get("user")
 	// This should not happen as middleware already checks for valid user
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})

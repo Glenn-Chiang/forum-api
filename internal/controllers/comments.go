@@ -38,14 +38,14 @@ func (controller *CommentController) GetByPostID(ctx *gin.Context) {
 // POST /comments
 func (controller *CommentController) Create(ctx *gin.Context) {
 	// Validate request body
-	var requestBody models.CreateCommentRequest
+	var requestBody models.NewComment
 	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Retrieve the authenticated user from context
-	user, exists := ctx.Get("user") 
+	user, exists := ctx.Get("user")
 	// This should not happen as middleware already checks for valid user
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -61,8 +61,8 @@ func (controller *CommentController) Create(ctx *gin.Context) {
 
 	// Map fields from request body to Comment model
 	comment := models.Comment{
-		Content: requestBody.Content,
-		PostID: requestBody.PostID,
+		Content:  requestBody.Content,
+		PostID:   requestBody.PostID,
 		AuthorID: requestBody.AuthorID,
 	}
 
@@ -88,11 +88,11 @@ func (controller *CommentController) Update(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid comment ID"})
-		return	
+		return
 	}
 
 	// Retrieve the authenticated user from context
-	user, exists := ctx.Get("user") 
+	user, exists := ctx.Get("user")
 	// This should not happen as middleware already checks for valid user
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -107,14 +107,14 @@ func (controller *CommentController) Update(ctx *gin.Context) {
 	}
 
 	// Validate request body
-	var requestBody models.UpdateCommentRequest
+	var requestBody models.UpdateCommentData
 	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	updatedComment, err := controller.service.Update(uint(id), requestBody.Content)
-	
+
 	// Handle errors
 	if err != nil {
 		var notFoundErr *services.NotFoundError
@@ -135,11 +135,11 @@ func (controller *CommentController) Delete(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid comment ID"})
-		return	
+		return
 	}
 
 	// Retrieve the authenticated user from context
-	user, exists := ctx.Get("user") 
+	user, exists := ctx.Get("user")
 	// This should not happen as middleware already checks for valid user
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -153,11 +153,10 @@ func (controller *CommentController) Delete(ctx *gin.Context) {
 		return
 	}
 
-	if err:= controller.service.Delete(uint(id)); err != nil {
+	if err := controller.service.Delete(uint(id)); err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
 	ctx.JSON(http.StatusNoContent, nil)
 }
-

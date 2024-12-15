@@ -18,7 +18,7 @@ import (
 )
 
 const serverUrl = "localhost:8080"
-const clientUrl = "*"
+const clientUrl = "*" // TODO: Set to frontend domain
 
 func main() {
 	if err := godotenv.Load(); err != nil {
