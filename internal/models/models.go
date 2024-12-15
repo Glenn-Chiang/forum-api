@@ -33,8 +33,8 @@ type NewPost struct {
 
 // Structure of request body for updating a post
 type UpdatePostData struct {
-	Title   string `json:"title" binding:"required"`
-	Content string `json:"content" binding:"required,min=10"`
+	Title   string `json:"title" binding:"required,max=200"`
+	Content string `json:"content" binding:"required,min=10,max=1000"`
 }
 
 type Comment struct {

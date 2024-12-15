@@ -37,8 +37,9 @@ func (service *CommentService) Create(commentData *models.Comment) (*models.Comm
 		if errors.Is(err, gorm.ErrForeignKeyViolated) {
 			return nil, NewNotFoundError("post_id or author_id")
 		}
+		return nil, err
 	}
-	return service.commentRepo.Create(comment)
+	return comment, nil
 }
 
 // Update the content of the given comment

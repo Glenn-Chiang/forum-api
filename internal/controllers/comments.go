@@ -45,19 +45,19 @@ func (controller *CommentController) Create(ctx *gin.Context) {
 	}
 
 	// Retrieve the authenticated user from context
-	user, exists := ctx.Get("user")
-	// This should not happen as middleware already checks for valid user
-	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
+	// user, exists := ctx.Get("user")
+	// // This should not happen as middleware already checks for valid user
+	// if !exists {
+	// 	ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	// 	return
+	// }
 
-	// Check that the authorID of the comment corresponds to the currently authenticated user's ID
-	userID := user.(*models.User).ID
-	if userID != requestBody.AuthorID {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
+	// // Check that the authorID of the comment corresponds to the currently authenticated user's ID
+	// userID := user.(*models.User).ID
+	// if userID != requestBody.AuthorID {
+	// 	ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	// 	return
+	// }
 
 	// Map fields from request body to Comment model
 	comment := models.Comment{
