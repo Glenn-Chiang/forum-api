@@ -14,3 +14,7 @@ Content-Type: application/json
     "content": "how we feeling",
     "author_id": 1
 }
+
+### Delete post
+# @prompt id
+DELETE {{baseUrl}}/posts/{{id}}

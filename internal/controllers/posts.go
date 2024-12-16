@@ -131,7 +131,7 @@ func (controller *PostController) Update(ctx *gin.Context) {
 		return
 	}
 
-	// Check that the post ID corresponds to the currently authenticated user's ID
+	// TODO: Check that the post's authorID corresponds to the currently authenticated user's ID
 	userID := user.(*models.User).ID
 	if userID != uint(id) {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -164,22 +164,27 @@ func (controller *PostController) Delete(ctx *gin.Context) {
 	}
 
 	// Retrieve the authenticated user from context
-	user, exists := ctx.Get("user")
-	// This should not happen as middleware already checks for valid user
-	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
+	// user, exists := ctx.Get("user")
+	// // This should not happen as middleware already checks for valid user
+	// if !exists {
+	// 	ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	// 	return
+	// }
 
-	// Check that the authorID of the post corresponds to the currently authenticated user's ID
-	userID := user.(*models.User).ID
-	if userID != uint(id) {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
+	// // Check that the authorID of the post corresponds to the currently authenticated user's ID
+	// userID := user.(*models.User).ID
+	// if userID != uint(id) { // TODO: Compare with authorID of post, not with post ID!
+	// 	ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	// 	return
+	// }
 
 	if err := controller.service.Delete(uint(id)); err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		var notFoundErr *services.NotFoundError
+		if errors.As(err, &notFoundErr) {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": notFoundErr.Error()})
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

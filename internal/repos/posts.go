@@ -2,7 +2,6 @@ package repos
 
 import (
 	"cvwo-backend/internal/models"
-	"fmt"
 
 	"gorm.io/gorm"
 )
@@ -81,12 +80,12 @@ func (repo *PostRepo) AssociatePostWithTopics(post *models.Post, topics []models
 }
 
 func (repo *PostRepo) Delete(id uint) error {
-	result := repo.DB.Delete(&models.User{}, id)
+	result := repo.DB.Delete(&models.Post{}, id)
 	if result.Error != nil {
 		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return fmt.Errorf("post not found")
+		return gorm.ErrRecordNotFound
 	}
 	return nil
 }
