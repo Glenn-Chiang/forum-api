@@ -23,6 +23,12 @@ var posts = []models.Post{
 	{Title: "Out, brief candle", Content: "Out, out brief candle. Life's but a walking shadow. A poor player that struts and frets his hour upon the stage, and then is heard no more.", AuthorID: 4},
 }
 
+var topics = []models.Topic{
+	{Name: "Philosophy"},
+	{Name: "Literature"},
+	{Name: "Shows/Movies"},
+}
+
 func SeedData(db *gorm.DB) error {
 	// If there is at least 1 user, we assume the database is already populated and do not seed it
 	var count int64
@@ -40,7 +46,10 @@ func SeedData(db *gorm.DB) error {
 	if err := db.Create(&posts).Error; err != nil {
 		return err
 	}
+	if err := db.Create(&topics).Error; err != nil {
+		return err
+	}
 
-	log.Println("Database seeded successfully")
+	log.Println("Database seeded")
 	return nil
 }

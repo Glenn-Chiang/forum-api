@@ -40,6 +40,5 @@ func RegisterCommentRoutes(router *gin.Engine, auth *middleware.AuthMiddleware, 
 
 func RegisterTopicRoutes(router *gin.Engine, auth *middleware.AuthMiddleware, controller *controllers.TopicController) {
 	router.GET("/topics", controller.GetAll)
-	router.POST("/topics", auth.CheckAuth, controller.Create)
-	router.DELETE("/topics/:id", auth.CheckAuth, controller.Delete)
+	
 }
