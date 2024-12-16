@@ -21,7 +21,7 @@ type Post struct {
 	UpdatedAt time.Time `json:"updated_at"`
 	AuthorID  uint      `json:"author_id"`
 	Author    *User     `gorm:"constraint:OnDelete:SET NULL;" json:"author,omitempty"`
-	Topics    []Topic  `gorm:"many2many:post_topics" json:"topics"`
+	Topics    []Topic  `gorm:"many2many:post_topics;constraint:OnDelete:CASCADE;" json:"topics"`
 }
 
 // Structure of request body for creating a new post
@@ -68,5 +68,5 @@ type CommentUpdate struct {
 type Topic struct {
 	ID    uint    `json:"id"`
 	Name  string  `gorm:"uniqueIndex" json:"name" binding:"required"`
-	Posts []Post `gorm:"many2many:post_topics;" json:"-"`
+	Posts []Post `gorm:"many2many:post_topics;constraint:OnDelete:CASCADE" json:"-"`
 }

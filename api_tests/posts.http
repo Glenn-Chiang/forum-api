@@ -1,6 +1,6 @@
 ### Get all posts
 GET {{baseUrl}}/posts
-
+ 
 ### Get post by ID
 # @prompt id
 GET {{baseUrl}}/posts/{{id}}
