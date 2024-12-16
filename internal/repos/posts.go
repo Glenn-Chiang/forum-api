@@ -75,9 +75,9 @@ func (repo *PostRepo) Update(id uint, title string, content string) (*models.Pos
 	return &post, nil
 }
 
-// Associate the given post with the given list of topics
+// Replace the current list of topics associated with the given post with the given new list of topics
 func (repo *PostRepo) AssociatePostWithTopics(post *models.Post, topics []models.Topic) error {
-	return repo.DB.Model(post).Association("Topics").Append(topics)
+	return repo.DB.Model(post).Association("Topics").Replace(topics)
 }
 
 func (repo *PostRepo) Delete(id uint) error {

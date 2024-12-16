@@ -107,7 +107,7 @@ func (controller *CommentController) Update(ctx *gin.Context) {
 	// }
 
 	// Validate request body
-	var requestBody models.UpdateCommentData
+	var requestBody models.CommentUpdate
 	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

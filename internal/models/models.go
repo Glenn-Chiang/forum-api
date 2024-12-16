@@ -29,12 +29,18 @@ type NewPost struct {
 	Title    string `json:"title" binding:"required,max=200"`
 	Content  string `json:"content" binding:"required,min=10,max=1000"`
 	AuthorID uint   `json:"author_id" binding:"required"`
+	TopicIDs []uint `json:"topics_ids"`
 }
 
 // Structure of request body for updating a post
-type UpdatePostData struct {
+type PostUpdate struct {
 	Title   string `json:"title" binding:"required,max=200"`
 	Content string `json:"content" binding:"required,min=10,max=1000"`
+}
+
+// Structure of request body for updating the topics associated with a post
+type TagsUpdate struct {
+	TopicIDs []uint `json:"topic_ids"`
 }
 
 type Comment struct {
@@ -55,7 +61,7 @@ type NewComment struct {
 }
 
 // Structure of request body for updating a comment
-type UpdateCommentData struct {
+type CommentUpdate struct {
 	Content string `json:"content" binding:"required,max=1000"`
 }
 

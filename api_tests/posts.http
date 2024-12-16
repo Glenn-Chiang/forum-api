@@ -18,3 +18,12 @@ Content-Type: application/json
 ### Delete post
 # @prompt id
 DELETE {{baseUrl}}/posts/{{id}}
+
+### Tag post with topics
+# @prompt id
+PUT {{baseUrl}}/posts/{{id}}/topics
+Content-Type: application/json
+
+{
+    "topic_ids": [1, 2]
+}

@@ -22,6 +22,7 @@ func RegisterPostRoutes(router *gin.Engine, auth *middleware.AuthMiddleware, con
 	router.GET("/posts/:id", controller.GetByID)
 	router.POST("/posts", controller.Create)
 	router.PATCH("/posts/:id", controller.Update)
+	router.PUT("/posts/:id/topics", controller.UpdateTags)
 	router.DELETE("/posts/:id", controller.Delete)
 	// router.POST("/posts", auth.CheckAuth, controller.Create)
 	// router.PATCH("/posts/:id", auth.CheckAuth, controller.Update)

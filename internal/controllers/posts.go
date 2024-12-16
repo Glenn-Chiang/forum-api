@@ -11,11 +11,12 @@ import (
 )
 
 type PostController struct {
-	service services.PostService
+	postService    services.PostService
+	taggingService services.TaggingService
 }
 
-func NewPostController(service services.PostService) *PostController {
-	return &PostController{service}
+func NewPostController(postService services.PostService, taggingService services.TaggingService) *PostController {
+	return &PostController{postService, taggingService}
 }
 
 // GET /posts or /posts?topic_id=1
@@ -32,9 +33,9 @@ func (controller *PostController) GetAll(ctx *gin.Context) {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid topic_id"})
 			return
 		}
-		posts, err = controller.service.GetByTopic(uint(topicID))
+		posts, err = controller.postService.GetByTopic(uint(topicID))
 	} else { // If no topicId is specified
-		posts, err = controller.service.GetAll()
+		posts, err = controller.postService.GetAll()
 	}
 
 	if err != nil {
@@ -52,7 +53,7 @@ func (controller *PostController) GetByID(ctx *gin.Context) {
 		return
 	}
 
-	post, err := controller.service.GetByID(uint(id))
+	post, err := controller.postService.GetByID(uint(id))
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -91,7 +92,7 @@ func (controller *PostController) Create(ctx *gin.Context) {
 		AuthorID: requestBody.AuthorID,
 	}
 
-	newPost, err := controller.service.Create(&post)
+	newPost, err := controller.postService.Create(&post)
 
 	// Handle errors
 	if err != nil {
@@ -117,7 +118,7 @@ func (controller *PostController) Update(ctx *gin.Context) {
 	}
 
 	// Validate request body
-	var requestBody models.UpdatePostData
+	var requestBody models.PostUpdate
 	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -138,7 +139,7 @@ func (controller *PostController) Update(ctx *gin.Context) {
 		return
 	}
 
-	updatedPost, err := controller.service.Update(uint(id), requestBody.Title, requestBody.Content)
+	updatedPost, err := controller.postService.Update(uint(id), requestBody.Title, requestBody.Content)
 
 	// Handle errors
 	if err != nil {
@@ -152,6 +153,36 @@ func (controller *PostController) Update(ctx *gin.Context) {
 	}
 
 	ctx.IndentedJSON(http.StatusOK, updatedPost)
+}
+
+// PUT /posts/:id/topics
+// Replace the list of topics associated with a post with a new list of topics
+func (controller *PostController) UpdateTags(ctx *gin.Context) {
+	// Validate postID
+	postId, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid post ID"})
+		return
+	}
+
+	// Validate request body
+	var requestBody models.TagsUpdate
+	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := controller.taggingService.TagPostWithTopics(uint(postId), requestBody.TopicIDs); err != nil {
+		var notFoundErr *services.NotFoundError
+		if errors.As(err, &notFoundErr) {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": notFoundErr.Error()})
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusNoContent, nil)
 }
 
 // DELETE /posts/:id
@@ -178,7 +209,7 @@ func (controller *PostController) Delete(ctx *gin.Context) {
 	// 	return
 	// }
 
-	if err := controller.service.Delete(uint(id)); err != nil {
+	if err := controller.postService.Delete(uint(id)); err != nil {
 		var notFoundErr *services.NotFoundError
 		if errors.As(err, &notFoundErr) {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": notFoundErr.Error()})

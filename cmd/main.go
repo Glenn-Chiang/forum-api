@@ -28,30 +28,29 @@ func main() {
 	// Initialize database
 	db := data.InitDB(os.Getenv("DB_URL"))
 
-	// Initialize feature layers
-	// Users
+	// Initialize application layers
+	// Repositories (data access)
 	userRepo := repos.NewUserRepo(db)
-	userService := services.NewUserService(*userRepo)
-	userController := controllers.NewUserController(*userService)
-	
-	// Posts
 	postRepo := repos.NewPostRepo(db)
-	postService := services.NewPostService(*postRepo, *userRepo)
-	postController := controllers.NewPostController(*postService)
-	
-	// Comments
 	commentRepo := repos.NewCommentRepo(db)
-	commentService := services.NewCommentService(*commentRepo, *postRepo, *userRepo)
-	commentController := controllers.NewCommentController(*commentService)
-	
-	// Topics
 	topicRepo := repos.NewTopicRepo(db)
+	
+	// Services (business logic)
+	userService := services.NewUserService(*userRepo)
+	postService := services.NewPostService(*postRepo, *userRepo)
+	commentService := services.NewCommentService(*commentRepo, *postRepo, *userRepo)
 	topicService := services.NewTopicService(*topicRepo)
-	topicController := controllers.NewTopicController(*topicService)
-
-	// Authentication
+	taggingService := services.NewTaggingService(*postRepo, *topicRepo)
 	authService := services.NewAuthService(userService)
+	
+	// Controllers (route handlers)
+	userController := controllers.NewUserController(*userService)
+	postController := controllers.NewPostController(*postService, *taggingService)
+	commentController := controllers.NewCommentController(*commentService)
+	topicController := controllers.NewTopicController(*topicService)
 	authController := controllers.NewAuthController(authService)
+
+	// Authentication middleware to validate jwt from requests
 	authMiddleware := middleware.NewAuthMiddleware(authService)
 
 	// Initialize router
