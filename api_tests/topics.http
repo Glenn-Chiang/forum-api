@@ -1,0 +1,2 @@
+### Get all topics
+GET {{baseUrl}}/topics

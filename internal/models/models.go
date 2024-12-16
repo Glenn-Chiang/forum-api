@@ -62,5 +62,5 @@ type UpdateCommentData struct {
 type Topic struct {
 	ID    uint    `json:"id"`
 	Name  string  `gorm:"uniqueIndex" json:"name" binding:"required"`
-	Posts []*Post `gorm:"many2many:post_topics;"`
+	Posts []*Post `gorm:"many2many:post_topics;" json:"-"`
 }

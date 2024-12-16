@@ -14,36 +14,37 @@ func NewPostRepo(db *gorm.DB) *PostRepo {
 	return &PostRepo{DB: db}
 }
 
+// Get a list of all posts including their associated topics
 func (repo *PostRepo) GetAll() ([]models.Post, error) {
 	var posts []models.Post
-	if err := repo.DB.Find(&posts).Error; err != nil {
+	if err := repo.DB.Preload("Topics").Find(&posts).Error; err != nil {
 		return nil, err
 	}
 	return posts, nil
 }
 
-// Get a particular post including the associated author
+// Get an individual post including the associated author and topics
 func (repo *PostRepo) GetByID(id uint) (*models.Post, error) {
 	var post models.Post
-	if err := repo.DB.Preload("Author").First(&post, id).Error; err != nil {
+	if err := repo.DB.Preload("Topics").Preload("Author").First(&post, id).Error; err != nil {
 		return nil, err
 	}
 	return &post, nil
 }
 
-// Get all posts made by the given user
+// Get all posts made by a particular user, including the associated topics of each post
 func (repo *PostRepo) GetByUserID(userId uint) ([]models.Post, error) {
 	var posts []models.Post
-	if err := repo.DB.Find(&posts, models.Post{AuthorID: userId}).Error; err != nil {
+	if err := repo.DB.Preload("Topics").Find(&posts, models.Post{AuthorID: userId}).Error; err != nil {
 		return nil, err
 	}
 	return posts, nil
 }
 
-// Get all posts associated with the given topic
+// Get all posts associated with a particular topic. Includes the associated topics of each post.
 func (repo *PostRepo) GetByTopic(topicId uint) ([]models.Post, error) {
 	var posts []models.Post
-	err := repo.DB.Joins("JOIN post_topics ON posts.id = post_topics.post_id").
+	err := repo.DB.Preload("Topics").Joins("JOIN post_topics ON posts.id = post_topics.post_id").
 		Where("post_topics.topic_id = ?", topicId).
 		Find(&posts).Error
 	if err != nil {
