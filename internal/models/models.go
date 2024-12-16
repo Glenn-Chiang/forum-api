@@ -21,7 +21,7 @@ type Post struct {
 	UpdatedAt time.Time `json:"updated_at"`
 	AuthorID  uint      `json:"author_id"`
 	Author    *User     `gorm:"constraint:OnDelete:SET NULL;" json:"author,omitempty"`
-	Topics    []*Topic  `gorm:"many2many:post_topics" json:"topics"`
+	Topics    []Topic  `gorm:"many2many:post_topics" json:"topics"`
 }
 
 // Structure of request body for creating a new post
@@ -29,7 +29,7 @@ type NewPost struct {
 	Title    string `json:"title" binding:"required,max=200"`
 	Content  string `json:"content" binding:"required,min=10,max=1000"`
 	AuthorID uint   `json:"author_id" binding:"required"`
-	TopicIDs []uint `json:"topics_ids"`
+	TopicIDs []uint `json:"topic_ids"`
 }
 
 // Structure of request body for updating a post
@@ -68,5 +68,5 @@ type CommentUpdate struct {
 type Topic struct {
 	ID    uint    `json:"id"`
 	Name  string  `gorm:"uniqueIndex" json:"name" binding:"required"`
-	Posts []*Post `gorm:"many2many:post_topics;" json:"-"`
+	Posts []Post `gorm:"many2many:post_topics;" json:"-"`
 }

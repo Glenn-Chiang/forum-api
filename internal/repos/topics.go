@@ -2,7 +2,6 @@ package repos
 
 import (
 	"cvwo-backend/internal/models"
-	"fmt"
 
 	"gorm.io/gorm"
 )
@@ -23,14 +22,6 @@ func (repo *TopicRepo) GetAll() ([]models.Topic, error) {
 	return topics, nil
 }
 
-func (repo *TopicRepo) GetByID(id uint) (*models.Topic, error) {
-	var topic models.Topic
-	if err := repo.DB.First(&topic, id).Error; err != nil {
-		return nil, err
-	}
-	return &topic, nil
-}
-
 // Get the list of topics with the given IDs
 func (repo *TopicRepo) GetByIDs(ids []uint) ([]models.Topic, error){
 	var topics []models.Topic
@@ -38,22 +29,4 @@ func (repo *TopicRepo) GetByIDs(ids []uint) ([]models.Topic, error){
 		return nil, err
 	}
 	return topics, nil
-}
-
-func (repo *TopicRepo) Create(topic *models.Topic) (*models.Topic, error) {
-	if err := repo.DB.Create(topic).Error; err != nil {
-		return nil, err
-	}
-	return topic, nil
-}
-
-func (repo *TopicRepo) Delete(id uint) error {
-	result := repo.DB.Delete(&models.Topic{}, id)
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected == 0 {
-		return fmt.Errorf("topic not found")
-	}
-	return nil
 }

@@ -10,9 +10,10 @@ POST {{baseUrl}}/posts
 Content-Type: application/json
 
 {
-    "title": "viktor nation",
-    "content": "how we feeling",
-    "author_id": 1
+    "title": "test post with topics",
+    "content": "test post with topics",
+    "author_id": 1,
+    "topic_ids": [1]
 }
 
 ### Delete post

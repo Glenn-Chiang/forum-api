@@ -45,7 +45,7 @@ func main() {
 	
 	// Controllers (route handlers)
 	userController := controllers.NewUserController(*userService)
-	postController := controllers.NewPostController(*postService, *taggingService)
+	postController := controllers.NewPostController(*postService, *topicService, *taggingService)
 	commentController := controllers.NewCommentController(*commentService)
 	topicController := controllers.NewTopicController(*topicService)
 	authController := controllers.NewAuthController(authService)

@@ -12,11 +12,12 @@ import (
 
 type PostController struct {
 	postService    services.PostService
+	topicService   services.TopicService
 	taggingService services.TaggingService
 }
 
-func NewPostController(postService services.PostService, taggingService services.TaggingService) *PostController {
-	return &PostController{postService, taggingService}
+func NewPostController(postService services.PostService, topicService services.TopicService, taggingService services.TaggingService) *PostController {
+	return &PostController{postService, topicService, taggingService}
 }
 
 // GET /posts or /posts?topic_id=1
@@ -70,18 +71,31 @@ func (controller *PostController) Create(ctx *gin.Context) {
 		return
 	}
 
-	// Retrieve the authenticated user from context
-	user, exists := ctx.Get("user")
-	// This should not happen as middleware already checks for valid user
-	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
+	// // Retrieve the authenticated user from context
+	// user, exists := ctx.Get("user")
+	// // This should not happen as middleware already checks for valid user
+	// if !exists {
+	// 	ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	// 	return
+	// }
 
-	// Check that the authorID of the post corresponds to the currently authenticated user's ID
-	userID := user.(*models.User).ID
-	if userID != requestBody.AuthorID {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	// // Check that the authorID of the post corresponds to the currently authenticated user's ID
+	// userID := user.(*models.User).ID
+	// if userID != requestBody.AuthorID {
+	// 	ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	// 	return
+	// }
+
+	// Get the topics associated with the list of topic IDs
+	topics, err := controller.topicService.GetByIDs(requestBody.TopicIDs)
+	// Handle errors with fetching topics
+	if err != nil {
+		var notFoundErr *services.NotFoundError
+		if errors.As(err, &notFoundErr) {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": notFoundErr.Error()})
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -90,6 +104,7 @@ func (controller *PostController) Create(ctx *gin.Context) {
 		Title:    requestBody.Title,
 		Content:  requestBody.Content,
 		AuthorID: requestBody.AuthorID,
+		Topics:   topics,
 	}
 
 	newPost, err := controller.postService.Create(&post)
