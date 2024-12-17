@@ -40,6 +40,7 @@ func (repo *CommentRepo) GetByID(id uint) (*models.Comment, error) {
 	return &comment, nil
 }
 
+// Create a new comment
 func (repo *CommentRepo) Create(comment *models.Comment) (*models.Comment, error) {
 	if err := repo.DB.Create(comment).Error; err != nil {
 		return nil, err
@@ -61,6 +62,7 @@ func (repo *CommentRepo) Update(id uint, content string) (*models.Comment, error
 	return &comment, nil
 }
 
+// Delete an individual comment
 func (repo *CommentRepo) Delete(id uint) error {
 	result := repo.DB.Delete(&models.Comment{}, id)
 	if result.Error != nil {

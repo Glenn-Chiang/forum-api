@@ -22,19 +22,28 @@ func (service *PostService) GetAll() ([]models.Post, error) {
 	return service.postRepo.GetAll()
 }
 
+// Get an individual post by ID
 func (service *PostService) GetByID(id uint) (*models.Post, error) {
-	return service.postRepo.GetByID(id)
+	post, err := service.postRepo.GetByID(id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errs.New(errs.ErrNotFound, "Post not found")
+		}
+	}
+	return post, nil
 }
 
+// Get all posts tagged with the specified topic
 func (service *PostService) GetByTopic(topicID uint) ([]models.Post, error) {
 	return service.postRepo.GetByTopic(topicID)
 }
 
+// Create a new post
 func (service *PostService) Create(postData *models.Post) (*models.Post, error) {
 	post, err := service.postRepo.Create(postData)
 	if err != nil {
 		if errors.Is(err, gorm.ErrForeignKeyViolated) {
-			return nil, errs.New(errs.ErrNotFound, "author_id not found")
+			return nil, errs.New(errs.ErrNotFound, "Author not found")
 		}
 		return nil, err
 	}
@@ -43,9 +52,23 @@ func (service *PostService) Create(postData *models.Post) (*models.Post, error) 
 
 // Update the title and content of the given post
 func (service *PostService) Update(id uint, title string, content string) (*models.Post, error) {
-	return service.postRepo.Update(id, title, content)
+	post, err := service.postRepo.Update(id, title, content)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errs.New(errs.ErrNotFound, "Post not found")
+		}
+		return nil, err
+	}
+	return post, nil
 }
 
+// Delete an individual post
 func (service *PostService) Delete(id uint) error {
-	return service.postRepo.Delete(id)
+	if err:= service.postRepo.Delete(id); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errs.New(errs.ErrNotFound, "Post not found")
+		}
+		return err
+	}
+	return nil
 }

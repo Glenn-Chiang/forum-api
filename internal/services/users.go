@@ -32,7 +32,7 @@ func (service *UserService) GetByID(id uint) (*models.User, error) {
 }
 
 func (service *UserService) Create(userData *models.AuthInput) (*models.User, error) {
-	// Hash password
+	// Store hashed password instead of actual password
 	passwordHash, err := HashPassword(userData.Password)
 	if err != nil {
 		return nil, err
@@ -54,5 +54,11 @@ func (service *UserService) Create(userData *models.AuthInput) (*models.User, er
 }
 
 func (service *UserService) Delete(id uint) error {
-	return service.repo.Delete(id)
+	if err:= service.repo.Delete(id); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errs.New(errs.ErrNotFound, "User not found")
+		}
+		return err
+	}
+	return nil
 }
