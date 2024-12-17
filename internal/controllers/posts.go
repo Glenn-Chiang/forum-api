@@ -140,19 +140,19 @@ func (controller *PostController) Update(ctx *gin.Context) {
 	}
 
 	// Retrieve the authenticated user from context
-	user, exists := ctx.Get("user")
-	// This should not happen as middleware already checks for valid user
-	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
+	// user, exists := ctx.Get("user")
+	// // This should not happen as middleware already checks for valid user
+	// if !exists {
+	// 	ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	// 	return
+	// }
 
 	// TODO: Check that the post's authorID corresponds to the currently authenticated user's ID
-	userID := user.(*models.User).ID
-	if userID != uint(id) {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
+	// userID := user.(*models.User).ID
+	// if userID != uint(id) {
+	// 	ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	// 	return
+	// }
 
 	updatedPost, err := controller.postService.Update(uint(id), requestBody.Title, requestBody.Content)
 
