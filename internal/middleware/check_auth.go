@@ -1,8 +1,8 @@
 package middleware
 
 import (
+	errs "cvwo-backend/internal/errors"
 	"cvwo-backend/internal/services"
-	"errors"
 	"net/http"
 	"strings"
 
@@ -37,12 +37,8 @@ func (authMiddleware *AuthMiddleware) CheckAuth(ctx *gin.Context) {
 	// Check if token is valid and if so, retrieve the authenticated user
 	user, err := authMiddleware.service.ValidateToken(bearerToken[1]); 
 	if err != nil {
-		var authError *services.UnauthorizedError
-		if errors.As(err, &authError) {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": authError.Error()})
-			return
-		}
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		errs.HTTPErrorResponse(ctx, err)
+		ctx.Abort()
 		return
 	}
 

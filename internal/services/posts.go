@@ -1,6 +1,7 @@
 package services
 
 import (
+	errs "cvwo-backend/internal/errors"
 	"cvwo-backend/internal/models"
 	"cvwo-backend/internal/repos"
 	"errors"
@@ -33,7 +34,7 @@ func (service *PostService) Create(postData *models.Post) (*models.Post, error) 
 	post, err := service.postRepo.Create(postData)
 	if err != nil {
 		if errors.Is(err, gorm.ErrForeignKeyViolated) {
-			return nil, NewNotFoundError("author_id")
+			return nil, errs.New(errs.ErrNotFound, "author_id not found")
 		}
 		return nil, err
 	}

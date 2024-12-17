@@ -1,9 +1,9 @@
 package controllers
 
 import (
+	errs "cvwo-backend/internal/errors"
 	"cvwo-backend/internal/models"
 	"cvwo-backend/internal/services"
-	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -28,14 +28,7 @@ func (controller *AuthController) Login(ctx *gin.Context) {
 
 	user, token, err := controller.service.Authenticate(&authInput)
 	if err != nil {
-		var authError *services.UnauthorizedError
-		if errors.As(err, &authError) {
-			ctx.JSON(http.StatusUnauthorized, gin.H{"error": authError.Error()})
-			return
-		}
-		// Otherwise return server error
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
-		return
+		errs.HTTPErrorResponse(ctx, err)
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"token": token, "user": user})

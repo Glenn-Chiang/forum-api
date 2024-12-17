@@ -1,9 +1,9 @@
 package controllers
 
 import (
+	errs "cvwo-backend/internal/errors"
 	"cvwo-backend/internal/models"
 	"cvwo-backend/internal/services"
-	"errors"
 	"net/http"
 	"strconv"
 
@@ -22,7 +22,7 @@ func NewUserController(service services.UserService) *UserController {
 func (controller *UserController) GetAll(ctx *gin.Context) {
 	users, err := controller.service.GetAll()
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
 	ctx.IndentedJSON(http.StatusOK, users)
@@ -38,7 +38,7 @@ func (controller *UserController) GetByID(ctx *gin.Context) {
 
 	user, err := controller.service.GetByID(uint(id))
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
 	ctx.IndentedJSON(http.StatusOK, user)
@@ -55,14 +55,7 @@ func (controller *UserController) Create(ctx *gin.Context) {
 
 	newUser, err := controller.service.Create(&user)
 	if err != nil {
-		// Check if error is due to username already in use
-		var conflictErr *services.AlreadyInUseError
-		if errors.As(err, &conflictErr) {
-			ctx.JSON(http.StatusConflict, gin.H{"error": conflictErr.Error()})
-			return
-		}
-		// Otherwise return server error
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
 

@@ -1,7 +1,9 @@
 package services
 
 import (
+	errs "cvwo-backend/internal/errors"
 	"cvwo-backend/internal/models"
+	"cvwo-backend/internal/repos"
 
 	"errors"
 	"fmt"
@@ -11,14 +13,15 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type AuthService struct {
-	userService *UserService
+	userRepo *repos.UserRepo
 }
 
-func NewAuthService(userService *UserService) *AuthService {
-	return &AuthService{userService}
+func NewAuthService(userRepo *repos.UserRepo) *AuthService {
+	return &AuthService{userRepo}
 }
 
 func HashPassword(password string) (string, error) {
@@ -32,19 +35,19 @@ func HashPassword(password string) (string, error) {
 // Given a username and password, check if the password matches and if so, generate a jwt
 func (service *AuthService) Authenticate(authInput *models.AuthInput) (*models.User, string, error) {
 	// Check if there is any user with that username
-	user, err := service.userService.repo.GetByUsername(authInput.Username)
+	user, err := service.userRepo.GetByUsername(authInput.Username)
 	if err != nil {
-		return nil, "", NewUnauthorizedError("Username not found")
+		return nil, "", errs.New(errs.ErrUnauthorized, "Username not found")
 	}
 
 	// Check if password matches
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(authInput.Password)); err != nil {
-		return nil, "", NewUnauthorizedError("Incorrect password")
+		return nil, "", errs.New(errs.ErrUnauthorized, "Incorrect password")
 	}
 
 	// Set jwt claims including userID and expiration time
 	claims := jwt.RegisteredClaims{
-		ID: string(user.ID),
+		ID:        string(user.ID),
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 	}
 
@@ -68,33 +71,31 @@ func (service *AuthService) ValidateToken(tokenString string) (*models.User, err
 	})
 
 	if err != nil || !token.Valid {
-		return nil, NewUnauthorizedError("Invalid or expired token")
+		return nil, errs.New(errs.ErrUnauthorized, "Invalid or expired token")
 	}
 
 	// Check if the token's claims match the RegisteredClaims type
-	claims, ok := token.Claims.(jwt.RegisteredClaims); 
+	claims, ok := token.Claims.(jwt.RegisteredClaims)
 	if !ok {
-		return nil, NewUnauthorizedError("Invalid token")
+		return nil, errs.New(errs.ErrUnauthorized, "Invalid token")
 	}
 
 	// Check if token has expired
 	if claims.ExpiresAt.Compare(time.Now()) == -1 {
-		return nil, NewUnauthorizedError("Expired token")
+		return nil, errs.New(errs.ErrUnauthorized, "Expired token")
 	}
 
 	// Convert token ID to int
 	userId, err := strconv.Atoi(claims.ID)
 	if err != nil {
-		return nil, NewUnauthorizedError("Invalid user id")
+		return nil, errs.New(errs.ErrUnauthorized, "Invalid user id")
 	}
 
 	// Retrieve the user whose ID corresponds to the token ID
-	user, err := service.userService.GetByID(uint(userId))
+	user, err := service.userRepo.GetByID(uint(userId))
 	if err != nil {
-		// If no user corresponds to given ID, return unauthorized error
-		var notFoundErr *NotFoundError
-		if errors.As(err, &notFoundErr) {
-			return nil, NewUnauthorizedError("Invalid user id")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errs.New(errs.ErrUnauthorized, "Invalid user id")
 		}
 		return nil, err
 	}

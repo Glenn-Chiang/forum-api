@@ -1,9 +1,9 @@
 package controllers
 
 import (
+	errs "cvwo-backend/internal/errors"
 	"cvwo-backend/internal/models"
 	"cvwo-backend/internal/services"
-	"errors"
 	"net/http"
 	"strconv"
 
@@ -28,7 +28,7 @@ func (controller *CommentController) GetByPostID(ctx *gin.Context) {
 
 	comments, err := controller.service.GetByPostID(uint(postId))
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch comments"})
+		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
 
@@ -70,12 +70,7 @@ func (controller *CommentController) Create(ctx *gin.Context) {
 
 	// Handle errors
 	if err != nil {
-		var notFoundErr *services.NotFoundError
-		if errors.As(err, &notFoundErr) {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": notFoundErr.Error()})
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
 
@@ -117,12 +112,7 @@ func (controller *CommentController) Update(ctx *gin.Context) {
 
 	// Handle errors
 	if err != nil {
-		var notFoundErr *services.NotFoundError
-		if errors.As(err, &notFoundErr) {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": notFoundErr.Error()})
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
 
@@ -154,12 +144,7 @@ func (controller *CommentController) Delete(ctx *gin.Context) {
 	// }
 
 	if err := controller.service.Delete(uint(id)); err != nil {
-		var notFoundErr *services.NotFoundError
-		if errors.As(err, &notFoundErr) {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": notFoundErr.Error()})
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
 

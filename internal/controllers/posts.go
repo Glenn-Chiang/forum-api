@@ -1,9 +1,9 @@
 package controllers
 
 import (
+	errs "cvwo-backend/internal/errors"
 	"cvwo-backend/internal/models"
 	"cvwo-backend/internal/services"
-	"errors"
 	"net/http"
 	"strconv"
 
@@ -40,7 +40,7 @@ func (controller *PostController) GetAll(ctx *gin.Context) {
 	}
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
 	ctx.IndentedJSON(http.StatusOK, posts)
@@ -56,7 +56,7 @@ func (controller *PostController) GetByID(ctx *gin.Context) {
 
 	post, err := controller.postService.GetByID(uint(id))
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
 	ctx.IndentedJSON(http.StatusOK, post)
@@ -90,12 +90,7 @@ func (controller *PostController) Create(ctx *gin.Context) {
 	topics, err := controller.topicService.GetByIDs(requestBody.TopicIDs)
 	// Handle errors with fetching topics
 	if err != nil {
-		var notFoundErr *services.NotFoundError
-		if errors.As(err, &notFoundErr) {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": notFoundErr.Error()})
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
 
@@ -111,12 +106,7 @@ func (controller *PostController) Create(ctx *gin.Context) {
 
 	// Handle errors
 	if err != nil {
-		var notFoundErr *services.NotFoundError
-		if errors.As(err, &notFoundErr) {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": notFoundErr.Error()})
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
 
@@ -158,12 +148,7 @@ func (controller *PostController) Update(ctx *gin.Context) {
 
 	// Handle errors
 	if err != nil {
-		var notFoundErr *services.NotFoundError
-		if errors.As(err, &notFoundErr) {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": notFoundErr.Error()})
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
 
@@ -187,13 +172,10 @@ func (controller *PostController) UpdateTags(ctx *gin.Context) {
 		return
 	}
 
+	// TODO: Check authorization
+
 	if err := controller.taggingService.TagPostWithTopics(uint(postId), requestBody.TopicIDs); err != nil {
-		var notFoundErr *services.NotFoundError
-		if errors.As(err, &notFoundErr) {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": notFoundErr.Error()})
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
 
@@ -208,7 +190,7 @@ func (controller *PostController) Delete(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid post ID"})
 		return
 	}
-
+	
 	// Retrieve the authenticated user from context
 	// user, exists := ctx.Get("user")
 	// // This should not happen as middleware already checks for valid user
@@ -225,12 +207,7 @@ func (controller *PostController) Delete(ctx *gin.Context) {
 	// }
 
 	if err := controller.postService.Delete(uint(id)); err != nil {
-		var notFoundErr *services.NotFoundError
-		if errors.As(err, &notFoundErr) {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": notFoundErr.Error()})
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
 

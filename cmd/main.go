@@ -41,7 +41,7 @@ func main() {
 	commentService := services.NewCommentService(*commentRepo, *postRepo, *userRepo)
 	topicService := services.NewTopicService(*topicRepo)
 	taggingService := services.NewTaggingService(*postRepo, *topicRepo)
-	authService := services.NewAuthService(userService)
+	authService := services.NewAuthService(userRepo)
 	
 	// Controllers (route handlers)
 	userController := controllers.NewUserController(*userService)

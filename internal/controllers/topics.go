@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	errs "cvwo-backend/internal/errors"
 	"cvwo-backend/internal/services"
 	"net/http"
 
@@ -19,7 +20,7 @@ func NewTopicController(service services.TopicService) *TopicController {
 func (controller *TopicController) GetAll(ctx *gin.Context) {
 	topics, err := controller.service.GetAll()
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
 	ctx.IndentedJSON(http.StatusOK, topics)

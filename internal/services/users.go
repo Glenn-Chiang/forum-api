@@ -1,6 +1,7 @@
 package services
 
 import (
+	errs "cvwo-backend/internal/errors"
 	"cvwo-backend/internal/models"
 	"cvwo-backend/internal/repos"
 	"errors"
@@ -24,7 +25,7 @@ func (service *UserService) GetByID(id uint) (*models.User, error) {
 	user, err := service.repo.GetByID(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, NewNotFoundError("user")
+			return nil, errs.New(errs.ErrNotFound, "User not found")
 		}
 	}
 	return user, nil
@@ -45,7 +46,7 @@ func (service *UserService) Create(userData *models.AuthInput) (*models.User, er
 	// Check if username is already in use
 	if err != nil {
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
-			return nil, NewAlreadyInUseError("username")
+			return nil, errs.New(errs.ErrConflict, "Username already in use")
 		}
 		return nil, err
 	}
