@@ -9,8 +9,8 @@ type User struct {
 }
 
 type AuthInput struct {
-	Username string `gorm:"uniqueIndex" json:"username" binding:"required,min=5,max=20"`
-	Password string `binding:"required"`
+	Username string `gorm:"uniqueIndex" json:"username" binding:"required,max=20"`
+	Password string `binding:"required,min=5,max=20"`
 }
 
 type Post struct {
@@ -21,7 +21,7 @@ type Post struct {
 	UpdatedAt time.Time `json:"updated_at"`
 	AuthorID  uint      `json:"author_id"`
 	Author    *User     `gorm:"constraint:OnDelete:SET NULL;" json:"author,omitempty"`
-	Topics    []Topic  `gorm:"many2many:post_topics;constraint:OnDelete:CASCADE;" json:"topics"`
+	Topics    []Topic   `gorm:"many2many:post_topics;constraint:OnDelete:CASCADE;" json:"topics"`
 }
 
 // Structure of request body for creating a new post
@@ -39,7 +39,7 @@ type PostUpdate struct {
 }
 
 // Structure of request body for updating the topics associated with a post
-type TagsUpdate struct {
+type PostTagsUpdate struct {
 	TopicIDs []uint `json:"topic_ids"`
 }
 
@@ -66,7 +66,7 @@ type CommentUpdate struct {
 }
 
 type Topic struct {
-	ID    uint    `json:"id"`
-	Name  string  `gorm:"uniqueIndex" json:"name" binding:"required"`
+	ID    uint   `json:"id"`
+	Name  string `gorm:"uniqueIndex" json:"name"`
 	Posts []Post `gorm:"many2many:post_topics;constraint:OnDelete:CASCADE" json:"-"`
 }

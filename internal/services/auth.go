@@ -30,14 +30,16 @@ func HashPassword(password string) (string, error) {
 }
 
 // Given a username and password, check if the password matches and if so, generate a jwt
-func (service *AuthService) Authenticate(authInput *models.AuthInput) (string, error) {
+func (service *AuthService) Authenticate(authInput *models.AuthInput) (*models.User, string, error) {
+	// Check if there is any user with that username
 	user, err := service.userService.repo.GetByUsername(authInput.Username)
 	if err != nil {
-		return "", err
+		return nil, "", NewUnauthorizedError("Username not found")
 	}
 
+	// Check if password matches
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(authInput.Password)); err != nil {
-		return "", NewUnauthorizedError("incorrect password")
+		return nil, "", NewUnauthorizedError("Incorrect password")
 	}
 
 	// Set jwt claims including userID and expiration time
@@ -50,10 +52,10 @@ func (service *AuthService) Authenticate(authInput *models.AuthInput) (string, e
 
 	signedToken, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
 
-	return signedToken, err
+	return user, signedToken, err
 }
 
 func (service *AuthService) ValidateToken(tokenString string) (*models.User, error) {
@@ -66,24 +68,24 @@ func (service *AuthService) ValidateToken(tokenString string) (*models.User, err
 	})
 
 	if err != nil || !token.Valid {
-		return nil, NewUnauthorizedError("invalid or expired token")
+		return nil, NewUnauthorizedError("Invalid or expired token")
 	}
 
 	// Check if the token's claims match the RegisteredClaims type
 	claims, ok := token.Claims.(jwt.RegisteredClaims); 
 	if !ok {
-		return nil, NewUnauthorizedError("invalid token")
+		return nil, NewUnauthorizedError("Invalid token")
 	}
 
 	// Check if token has expired
 	if claims.ExpiresAt.Compare(time.Now()) == -1 {
-		return nil, NewUnauthorizedError("expired token")
+		return nil, NewUnauthorizedError("Expired token")
 	}
 
 	// Convert token ID to int
 	userId, err := strconv.Atoi(claims.ID)
 	if err != nil {
-		return nil, NewUnauthorizedError("invalid user id")
+		return nil, NewUnauthorizedError("Invalid user id")
 	}
 
 	// Retrieve the user whose ID corresponds to the token ID
@@ -92,7 +94,7 @@ func (service *AuthService) ValidateToken(tokenString string) (*models.User, err
 		// If no user corresponds to given ID, return unauthorized error
 		var notFoundErr *NotFoundError
 		if errors.As(err, &notFoundErr) {
-			return nil, NewUnauthorizedError("invalid user id")
+			return nil, NewUnauthorizedError("Invalid user id")
 		}
 		return nil, err
 	}

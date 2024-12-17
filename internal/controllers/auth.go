@@ -17,7 +17,7 @@ func NewAuthController(service *services.AuthService) *AuthController {
 	return &AuthController{service}
 }
 
-// GET /login
+// POST /login
 func (controller *AuthController) Login(ctx *gin.Context) {
 	var authInput models.AuthInput
 
@@ -26,7 +26,7 @@ func (controller *AuthController) Login(ctx *gin.Context) {
 		return
 	}
 
-	token, err := controller.service.Authenticate(&authInput)
+	user, token, err := controller.service.Authenticate(&authInput)
 	if err != nil {
 		var authError *services.UnauthorizedError
 		if errors.As(err, &authError) {
@@ -34,10 +34,9 @@ func (controller *AuthController) Login(ctx *gin.Context) {
 			return
 		}
 		// Otherwise return server error
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"token": token})
+	ctx.JSON(http.StatusOK, gin.H{"token": token, "user": user})
 }
-

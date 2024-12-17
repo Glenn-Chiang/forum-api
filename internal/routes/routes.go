@@ -14,7 +14,7 @@ func RegisterUserRoutes(router *gin.Engine, auth *middleware.AuthMiddleware, con
 }
 
 func RegisterAuthRoutes(router *gin.Engine, controller *controllers.AuthController) {
-	router.GET("/login", controller.Login)
+	router.POST("/login", controller.Login)
 }
 
 func RegisterPostRoutes(router *gin.Engine, auth *middleware.AuthMiddleware, controller *controllers.PostController) {
