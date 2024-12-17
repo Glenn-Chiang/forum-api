@@ -46,8 +46,8 @@ func (service *AuthService) Authenticate(authInput *models.AuthInput) (*models.U
 	}
 
 	// Set jwt claims including userID and expiration time
-	claims := jwt.RegisteredClaims{
-		ID:        string(user.ID),
+	claims := &jwt.RegisteredClaims{
+		ID:        strconv.Itoa(int(user.ID)),
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 	}
 
@@ -62,21 +62,17 @@ func (service *AuthService) Authenticate(authInput *models.AuthInput) (*models.U
 }
 
 func (service *AuthService) ValidateToken(tokenString string) (*models.User, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// Check that the token's signing method/algorithm matches
+	// Parse jwt while checking for correct claims type and signing method	
+	claims := &jwt.RegisteredClaims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Method.Alg())
 		}
 		return []byte(os.Getenv("JWT_SECRET")), nil
 	})
 
+	// Handle invalid token
 	if err != nil || !token.Valid {
-		return nil, errs.New(errs.ErrUnauthorized, "Invalid or expired token")
-	}
-
-	// Check if the token's claims match the RegisteredClaims type
-	claims, ok := token.Claims.(jwt.RegisteredClaims)
-	if !ok {
 		return nil, errs.New(errs.ErrUnauthorized, "Invalid token")
 	}
 
@@ -88,14 +84,14 @@ func (service *AuthService) ValidateToken(tokenString string) (*models.User, err
 	// Convert token ID to int
 	userId, err := strconv.Atoi(claims.ID)
 	if err != nil {
-		return nil, errs.New(errs.ErrUnauthorized, "Invalid user id")
+		return nil, errs.New(errs.ErrUnauthorized, fmt.Sprintf("Invalid user id: %s", claims.ID))
 	}
 
 	// Retrieve the user whose ID corresponds to the token ID
 	user, err := service.userRepo.GetByID(uint(userId))
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errs.New(errs.ErrUnauthorized, "Invalid user id")
+			return nil, errs.New(errs.ErrUnauthorized, "User not found")
 		}
 		return nil, err
 	}

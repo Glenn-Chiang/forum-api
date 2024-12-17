@@ -24,14 +24,14 @@ func (authMiddleware *AuthMiddleware) CheckAuth(ctx *gin.Context) {
 
 	// Check if Authorization header is missing
 	if authHeader == "" {
-		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing authorization header"})
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing authorization header"})
 		return
 	}
 
 	// Check if token is in valid format: "Bearer mytoken123"
 	bearerToken := strings.Split(authHeader, " ")
 	if len(bearerToken) != 2 || bearerToken[0] != "Bearer" {
-		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Malformed token"})
 		return
 	}
 
@@ -44,7 +44,7 @@ func (authMiddleware *AuthMiddleware) CheckAuth(ctx *gin.Context) {
 	}
 
 	// Store the authenticated user
-	ctx.Set("current_user", user)
+	ctx.Set("user", user)
 
 	// Pass control to handlers
 	ctx.Next()
