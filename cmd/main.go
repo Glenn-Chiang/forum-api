@@ -56,6 +56,9 @@ func main() {
 	// Initialize router
 	router := gin.Default()
 
+	// Logger middleware to log request body of all requests
+	router.Use(middleware.ResponseLogger)
+
 	// CORS middleware
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: []string{clientUrl},
