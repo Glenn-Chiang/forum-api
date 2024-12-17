@@ -33,3 +33,4 @@ func (controller *AuthController) Login(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"token": token, "user": user})
 }
+

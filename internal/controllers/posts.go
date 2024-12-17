@@ -2,6 +2,7 @@ package controllers
 
 import (
 	errs "cvwo-backend/internal/errors"
+	"cvwo-backend/internal/middleware"
 	"cvwo-backend/internal/models"
 	"cvwo-backend/internal/services"
 	"net/http"
@@ -31,7 +32,7 @@ func (controller *PostController) GetAll(ctx *gin.Context) {
 		// Parse topic_id from request query param
 		topicID, convErr := strconv.Atoi(topicIdParam)
 		if convErr != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid topic_id"})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid topic_id"})
 			return
 		}
 		posts, err = controller.postService.GetByTopic(uint(topicID))
@@ -50,7 +51,7 @@ func (controller *PostController) GetAll(ctx *gin.Context) {
 func (controller *PostController) GetByID(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid post ID"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
 		return
 	}
 
@@ -71,20 +72,18 @@ func (controller *PostController) Create(ctx *gin.Context) {
 		return
 	}
 
-	// // Retrieve the authenticated user from context
-	// user, exists := ctx.Get("user")
-	// // This should not happen as middleware already checks for valid user
-	// if !exists {
-	// 	ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-	// 	return
-	// }
+	// Retrieve the authenticated user from context
+	user, err := middleware.GetUserFromContext(ctx)
+	if err != nil {
+		errs.HTTPErrorResponse(ctx, err)
+		return
+	}
 
-	// // Check that the authorID of the post corresponds to the currently authenticated user's ID
-	// userID := user.(*models.User).ID
-	// if userID != requestBody.AuthorID {
-	// 	ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-	// 	return
-	// }
+	// Check that the authorID of the post corresponds to the currently authenticated user's ID
+	if user.ID != requestBody.AuthorID {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	// Get the topics associated with the list of topic IDs
 	topics, err := controller.topicService.GetByIDs(requestBody.TopicIDs)
@@ -102,9 +101,8 @@ func (controller *PostController) Create(ctx *gin.Context) {
 		Topics:   topics,
 	}
 
+	// Create the post
 	newPost, err := controller.postService.Create(&post)
-
-	// Handle errors
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -116,9 +114,9 @@ func (controller *PostController) Create(ctx *gin.Context) {
 // PATCH /posts/:id
 func (controller *PostController) Update(ctx *gin.Context) {
 	// Validate postID
-	id, err := strconv.Atoi(ctx.Param("id"))
+	postId, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid post ID"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
 		return
 	}
 
@@ -130,23 +128,27 @@ func (controller *PostController) Update(ctx *gin.Context) {
 	}
 
 	// Retrieve the authenticated user from context
-	// user, exists := ctx.Get("user")
-	// // This should not happen as middleware already checks for valid user
-	// if !exists {
-	// 	ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-	// 	return
-	// }
+	user, err := middleware.GetUserFromContext(ctx)
+	if err != nil {
+		errs.HTTPErrorResponse(ctx, err)
+		return
+	}
 
-	// TODO: Check that the post's authorID corresponds to the currently authenticated user's ID
-	// userID := user.(*models.User).ID
-	// if userID != uint(id) {
-	// 	ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-	// 	return
-	// }
+	// Fetch the post to check its authorID
+	post, err := controller.postService.GetByID(uint(postId))
+	if err != nil {
+		errs.HTTPErrorResponse(ctx, err)
+		return
+	}
 
-	updatedPost, err := controller.postService.Update(uint(id), requestBody.Title, requestBody.Content)
+	// Check that the post's authorID corresponds to the currently authenticated user's ID
+	if user.ID != post.AuthorID {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
-	// Handle errors
+	// Update the post
+	updatedPost, err := controller.postService.Update(uint(postId), requestBody.Title, requestBody.Content)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -161,7 +163,7 @@ func (controller *PostController) UpdateTags(ctx *gin.Context) {
 	// Validate postID
 	postId, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid post ID"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
 		return
 	}
 
@@ -172,8 +174,27 @@ func (controller *PostController) UpdateTags(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: Check authorization
+	// Retrieve the authenticated user from context
+	user, err := middleware.GetUserFromContext(ctx)
+	if err != nil {
+		errs.HTTPErrorResponse(ctx, err)
+		return
+	}
 
+	// Fetch the post to check its authorID
+	post, err := controller.postService.GetByID(uint(postId))
+	if err != nil {
+		errs.HTTPErrorResponse(ctx, err)
+		return
+	}
+
+	// Check that the post's authorID corresponds to the currently authenticated user's ID
+	if user.ID != post.AuthorID {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	// Update the post tags
 	if err := controller.taggingService.TagPostWithTopics(uint(postId), requestBody.TopicIDs); err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -185,28 +206,34 @@ func (controller *PostController) UpdateTags(ctx *gin.Context) {
 // DELETE /posts/:id
 func (controller *PostController) Delete(ctx *gin.Context) {
 	// Validate postID
-	id, err := strconv.Atoi(ctx.Param("id"))
+	postId, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid post ID"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
 		return
 	}
-	
+
 	// Retrieve the authenticated user from context
-	// user, exists := ctx.Get("user")
-	// // This should not happen as middleware already checks for valid user
-	// if !exists {
-	// 	ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-	// 	return
-	// }
+	user, err := middleware.GetUserFromContext(ctx)
+	if err != nil {
+		errs.HTTPErrorResponse(ctx, err)
+		return
+	}
 
-	// // Check that the authorID of the post corresponds to the currently authenticated user's ID
-	// userID := user.(*models.User).ID
-	// if userID != uint(id) { // TODO: Compare with authorID of post, not with post ID!
-	// 	ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-	// 	return
-	// }
+	// Fetch the post to check its authorID
+	post, err := controller.postService.GetByID(uint(postId))
+	if err != nil {
+		errs.HTTPErrorResponse(ctx, err)
+		return
+	}
 
-	if err := controller.postService.Delete(uint(id)); err != nil {
+	// Check that the post's authorID corresponds to the currently authenticated user's ID
+	if user.ID != post.AuthorID {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	// Delete the post
+	if err := controller.postService.Delete(uint(postId)); err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
 	}

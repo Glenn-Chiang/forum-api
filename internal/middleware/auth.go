@@ -2,6 +2,7 @@ package middleware
 
 import (
 	errs "cvwo-backend/internal/errors"
+	"cvwo-backend/internal/models"
 	"cvwo-backend/internal/services"
 	"net/http"
 	"strings"
@@ -49,3 +50,15 @@ func (authMiddleware *AuthMiddleware) CheckAuth(ctx *gin.Context) {
 	ctx.Next()
 }
 
+// Retrieve the authenticated user from the context
+func GetUserFromContext(ctx *gin.Context) (*models.User, error) {
+	value, exists := ctx.Get("user")
+	if !exists {
+		return nil, errs.New(errs.ErrUnauthorized, "Unauthenticated")
+	}
+	user, ok := value.(*models.User)
+	if !ok {
+		return nil, errs.New(errs.ErrUnauthorized, "Unauthenticated")
+	}
+	return user, nil
+}
