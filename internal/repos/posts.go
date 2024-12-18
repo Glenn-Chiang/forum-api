@@ -2,6 +2,7 @@ package repos
 
 import (
 	"cvwo-backend/internal/models"
+	"fmt"
 
 	"gorm.io/gorm"
 )
@@ -14,20 +15,27 @@ func NewPostRepo(db *gorm.DB) *PostRepo {
 	return &PostRepo{DB: db}
 }
 
+// Sorting methods
+
+const (
+	SortByRecent = "created_at"
+)
+
 // Get a list of all posts including their associated topics
-func (repo *PostRepo) GetList(limit, offset int) ([]models.Post, error) {
+func (repo *PostRepo) GetList(limit, offset int, sortBy string) ([]models.Post, error) {
 	var posts []models.Post
-	if err := repo.DB.Preload("Topics").Limit(limit).Offset(offset).Find(&posts).Error; err != nil {
+	if err := repo.DB.Preload("Topics").Limit(limit).Offset(offset).Order(fmt.Sprintf("%s %s", SortByRecent, "DESC")).Find(&posts).Error; err != nil {
 		return nil, err
 	}
 	return posts, nil
 }
 
 // Get all posts associated with a particular topic. Includes the associated topics of each post.
-func (repo *PostRepo) GetByTopic(topicId uint, limit, offset int) ([]models.Post, error) {
+func (repo *PostRepo) GetByTopic(topicId uint, limit, offset int, sortBy string) ([]models.Post, error) {
 	var posts []models.Post
 	err := repo.DB.Preload("Topics").Joins("JOIN post_topics ON posts.id = post_topics.post_id").
 		Where("post_topics.topic_id = ?", topicId).
+		Order(fmt.Sprintf("%s %s", sortBy, "DESC")).
 		Find(&posts).Error
 	if err != nil {
 		return nil, err

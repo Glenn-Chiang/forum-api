@@ -18,8 +18,13 @@ func NewPostService(postRepo repos.PostRepo, userRepo repos.UserRepo) *PostServi
 	return &PostService{postRepo, userRepo}
 }
 
-func (service *PostService) GetList(limit, offset int) ([]models.Post, error) {
-	return service.postRepo.GetList(limit, offset)
+func (service *PostService) GetList(limit, offset int, sortBy string) ([]models.Post, error) {
+	return service.postRepo.GetList(limit, offset, sortBy)
+}
+
+// Get all posts tagged with the specified topic
+func (service *PostService) GetByTopic(topicID uint, limit, offset int, sortBy string) ([]models.Post, error) {
+	return service.postRepo.GetByTopic(topicID, limit, offset, sortBy)
 }
 
 // Get an individual post by ID
@@ -31,11 +36,6 @@ func (service *PostService) GetByID(id uint) (*models.Post, error) {
 		}
 	}
 	return post, nil
-}
-
-// Get all posts tagged with the specified topic
-func (service *PostService) GetByTopic(topicID uint, limit, offset int) ([]models.Post, error) {
-	return service.postRepo.GetByTopic(topicID, limit, offset)
 }
 
 // Create a new post

@@ -4,6 +4,7 @@ import (
 	errs "cvwo-backend/internal/errors"
 	"cvwo-backend/internal/middleware"
 	"cvwo-backend/internal/models"
+	"cvwo-backend/internal/repos"
 	"cvwo-backend/internal/services"
 	"net/http"
 	"strconv"
@@ -24,20 +25,30 @@ func NewPostController(postService services.PostService, topicService services.T
 // GET /posts or /posts?topic_id=1&page=1&limit=10
 // Get a list of posts that is paginated, sorted, and filtered by topic
 func (controller *PostController) GetList(ctx *gin.Context) {
-	// Get the "page" query param and check that it is valid
+	// Get the "page" query param and validate it
 	page, err := strconv.Atoi(ctx.DefaultQuery("page", "1"))
 	if err != nil || page < 1 {
 		page = 1 // If invalid, just set to default
 	}
 
 	// Limit refers to number of records per page
-	// Get the "limit" query param and check that it is valid
+	// Get the "limit" query param and validate it
 	limit, err := strconv.Atoi(ctx.DefaultQuery("limit", "10"))
 	if err != nil || limit < 1 {
 		limit = 10 // If invalid, just set to default
 	}
 
+	// Pagination offset: The DB will fetch {limit} number of records starting from the record at this index.
 	offset := (page - 1) * limit
+
+	// Get the "sortBy" query param and validate it
+	sortBy := ctx.DefaultQuery("sortBy", repos.SortByRecent)
+	switch sortBy {
+	case repos.SortByRecent:
+	default:
+		ctx.JSON(400, gin.H{"error": "Invalid sort field"})
+        return
+	}
 
 	var posts []models.Post
 
@@ -45,7 +56,7 @@ func (controller *PostController) GetList(ctx *gin.Context) {
 
 	// If no topicId is specified
 	if topicIdParam == "" {
-		posts, err = controller.postService.GetList(limit, offset)
+		posts, err = controller.postService.GetList(limit, offset, sortBy)
 		if err != nil {
 			errs.HTTPErrorResponse(ctx, err)
 			return
@@ -57,7 +68,7 @@ func (controller *PostController) GetList(ctx *gin.Context) {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid topic_id"})
 			return
 		}
-		posts, err = controller.postService.GetByTopic(uint(topicId), limit, offset)
+		posts, err = controller.postService.GetByTopic(uint(topicId), limit, offset, sortBy)
 		if err != nil {
 			errs.HTTPErrorResponse(ctx, err)
 			return
@@ -101,7 +112,7 @@ func (controller *PostController) Create(ctx *gin.Context) {
 
 	// Check that the authorID of the post corresponds to the currently authenticated user's ID
 	if user.ID != requestBody.AuthorID {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
@@ -163,7 +174,7 @@ func (controller *PostController) Update(ctx *gin.Context) {
 
 	// Check that the post's authorID corresponds to the currently authenticated user's ID
 	if user.ID != post.AuthorID {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
@@ -210,7 +221,7 @@ func (controller *PostController) UpdateTags(ctx *gin.Context) {
 
 	// Check that the post's authorID corresponds to the currently authenticated user's ID
 	if user.ID != post.AuthorID {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
@@ -248,7 +259,7 @@ func (controller *PostController) Delete(ctx *gin.Context) {
 
 	// Check that the post's authorID corresponds to the currently authenticated user's ID
 	if user.ID != post.AuthorID {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
