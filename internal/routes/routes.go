@@ -18,7 +18,7 @@ func RegisterAuthRoutes(router *gin.Engine, controller *controllers.AuthControll
 }
 
 func RegisterPostRoutes(router *gin.Engine, auth *middleware.AuthMiddleware, controller *controllers.PostController) {
-	router.GET("/posts", controller.GetAll)
+	router.GET("/posts", controller.GetList)
 	router.GET("/posts/:id", controller.GetByID)
 	router.PUT("/posts/:id/topics", auth.CheckAuth, controller.UpdateTags)
 	router.POST("/posts", auth.CheckAuth, controller.Create)

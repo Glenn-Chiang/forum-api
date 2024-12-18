@@ -18,8 +18,8 @@ func NewPostService(postRepo repos.PostRepo, userRepo repos.UserRepo) *PostServi
 	return &PostService{postRepo, userRepo}
 }
 
-func (service *PostService) GetAll() ([]models.Post, error) {
-	return service.postRepo.GetAll()
+func (service *PostService) GetList(limit, offset int) ([]models.Post, error) {
+	return service.postRepo.GetList(limit, offset)
 }
 
 // Get an individual post by ID
@@ -34,8 +34,8 @@ func (service *PostService) GetByID(id uint) (*models.Post, error) {
 }
 
 // Get all posts tagged with the specified topic
-func (service *PostService) GetByTopic(topicID uint) ([]models.Post, error) {
-	return service.postRepo.GetByTopic(topicID)
+func (service *PostService) GetByTopic(topicID uint, limit, offset int) ([]models.Post, error) {
+	return service.postRepo.GetByTopic(topicID, limit, offset)
 }
 
 // Create a new post
@@ -64,7 +64,7 @@ func (service *PostService) Update(id uint, title string, content string) (*mode
 
 // Delete an individual post
 func (service *PostService) Delete(id uint) error {
-	if err:= service.postRepo.Delete(id); err != nil {
+	if err := service.postRepo.Delete(id); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errs.New(errs.ErrNotFound, "Post not found")
 		}

@@ -6,13 +6,14 @@ import (
 	"gorm.io/gorm"
 
 	"cvwo-backend/internal/models"
+	"cvwo-backend/internal/services"
 )
 
 var users = []models.User{
-	{Username: "Viktor"},
-	{Username: "Friedrich Nietzsche"},
-	{Username: "Hamlet"},
-	{Username: "Macbeth"},
+	{Username: "Viktor", Password: "password"},
+	{Username: "Friedrich Nietzsche", Password: "password"},
+	{Username: "Hamlet", Password: "password"},
+	{Username: "Macbeth", Password: "password"},
 }
 
 var posts = []models.Post{
@@ -29,6 +30,7 @@ var topics = []models.Topic{
 	{Name: "Shows/Movies"},
 }
 
+// Seed the database with initial data
 func SeedData(db *gorm.DB) error {
 	// If there is at least 1 user, we assume the database is already populated and do not seed it
 	var count int64
@@ -40,9 +42,17 @@ func SeedData(db *gorm.DB) error {
 		return nil
 	}
 
-	if err := db.Create(&users).Error; err != nil {
-		return err
+	// Hash the users' passwords before adding them to the database
+	for _, user := range users {
+		hashedPassword, err := services.HashPassword(user.Password)
+		if err != nil {
+			continue
+		}
+		if err := db.Create(&models.User{Username: user.Username, Password: hashedPassword}).Error; err != nil {
+			return err
+		}
 	}
+
 	if err := db.Create(&posts).Error; err != nil {
 		return err
 	}

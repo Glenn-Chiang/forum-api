@@ -21,29 +21,49 @@ func NewPostController(postService services.PostService, topicService services.T
 	return &PostController{postService, topicService, taggingService}
 }
 
-// GET /posts or /posts?topic_id=1
-func (controller *PostController) GetAll(ctx *gin.Context) {
-	topicIdParam := ctx.Query("topic_id")
+// GET /posts or /posts?topic_id=1&page=1&limit=10
+// Get a list of posts that is paginated, sorted, and filtered by topic
+func (controller *PostController) GetList(ctx *gin.Context) {
+	// Get the "page" query param and check that it is valid
+	page, err := strconv.Atoi(ctx.DefaultQuery("page", "1"))
+	if err != nil || page < 1 {
+		page = 1 // If invalid, just set to default
+	}
+
+	// Limit refers to number of records per page
+	// Get the "limit" query param and check that it is valid
+	limit, err := strconv.Atoi(ctx.DefaultQuery("limit", "10"))
+	if err != nil || limit < 1 {
+		limit = 10 // If invalid, just set to default
+	}
+
+	offset := (page - 1) * limit
 
 	var posts []models.Post
-	var err error
 
-	if topicIdParam != "" { // If topicId is specified
-		// Parse topic_id from request query param
-		topicID, convErr := strconv.Atoi(topicIdParam)
-		if convErr != nil {
+	topicIdParam := ctx.Query("topic_id")
+
+	// If no topicId is specified
+	if topicIdParam == "" {
+		posts, err = controller.postService.GetList(limit, offset)
+		if err != nil {
+			errs.HTTPErrorResponse(ctx, err)
+			return
+		}
+		// If topicId is specified, check if it is valid
+	} else {
+		topicId, err := strconv.Atoi(topicIdParam)
+		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid topic_id"})
 			return
 		}
-		posts, err = controller.postService.GetByTopic(uint(topicID))
-	} else { // If no topicId is specified
-		posts, err = controller.postService.GetAll()
+		posts, err = controller.postService.GetByTopic(uint(topicId), limit, offset)
+		if err != nil {
+			errs.HTTPErrorResponse(ctx, err)
+			return
+		}
 	}
 
-	if err != nil {
-		errs.HTTPErrorResponse(ctx, err)
-		return
-	}
 	ctx.IndentedJSON(http.StatusOK, posts)
 }
 

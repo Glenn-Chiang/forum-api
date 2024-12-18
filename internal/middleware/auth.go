@@ -43,10 +43,9 @@ func (authMiddleware *AuthMiddleware) CheckAuth(ctx *gin.Context) {
 		return
 	}
 
-	// Store the authenticated user
+	// Store the authenticated user in context
 	ctx.Set("user", user)
 
-	// Pass control to handlers
 	ctx.Next()
 }
 

@@ -1,6 +1,9 @@
 ### Get all posts
 GET {{baseUrl}}/posts
- 
+
+### Get paginated list of posts
+GET {{baseUrl}}/posts?page=1&limit=2
+
 ### Get post by ID
 # @prompt id
 GET {{baseUrl}}/posts/{{id}}
