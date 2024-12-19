@@ -35,21 +35,21 @@ func validPostSortField(sortBy string) (string, error) {
 }
 
 // Get a list of posts
-func (service *PostService) GetList(limit, offset int, sortBy string) ([]models.Post, error) {
+func (service *PostService) GetList(limit, offset int, sortBy string) ([]models.Post, int64, error) {
 	// Validate sortBy param
 	sortField, err := validPostSortField(sortBy)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	return service.postRepo.GetList(limit, offset, sortField)
 }
 
 // Get all posts tagged with at least 1 of the given topics
-func (service *PostService) GetByTags(topicIDs []uint, limit, offset int, sortBy string) ([]models.Post, error) {
+func (service *PostService) GetByTags(topicIDs []uint, limit, offset int, sortBy string) ([]models.Post, int64, error) {
 	// Validate sortBy param
 	sortField, err := validPostSortField(sortBy)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	return service.postRepo.GetByTopics(topicIDs, limit, offset, sortField)
@@ -65,11 +65,6 @@ func (service *PostService) GetByID(id uint) (*models.Post, error) {
 		return nil, err
 	}
 	return post, nil
-}
-
-// Get total number of posts
-func (service *PostService) GetTotalCount() (int64, error) {
-	return service.postRepo.GetTotalCount()
 }
 
 // Create a new post

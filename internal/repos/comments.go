@@ -14,22 +14,26 @@ func NewCommentRepo(db *gorm.DB) *CommentRepo {
 	return &CommentRepo{DB: db}
 }
 
-// Get the total number of comments
-func (repo *CommentRepo) GetTotalCount() (int64, error) {
-	var count int64
-	if err := repo.DB.Model(&models.Comment{}).Count(&count).Error; err != nil {
-		return 0, err
-	}
-	return count, nil
-}
-
 // Get all comments associated with the given post. Each comment includes the associated author.
-func (repo *CommentRepo) GetByPostID(postId uint, limit int, offset int, sortBy string) ([]models.Comment, error) {
+func (repo *CommentRepo) GetByPostID(postId uint, limit int, offset int, sortBy string) ([]models.Comment, int64, error) {
 	var comments []models.Comment
-	if err := repo.DB.Preload("Author").Limit(limit).Offset(offset).Order(sortBy).Find(&comments, models.Comment{PostID: postId}).Error; err != nil {
-		return nil, err
+
+	// Apply filter
+	query := repo.DB
+	query = query.Where("post_id = ?", postId)
+
+	// Get the filtered, sorted and paginated comments
+	if err := query.Preload("Author").Limit(limit).Offset(offset).Order(sortBy).Find(&comments).Error; err != nil {
+		return nil, 0, err
 	}
-	return comments, nil
+
+	// Get the total number of comments associated with the given post
+	var count int64
+	if err := query.Model(&models.Comment{}).Count(&count).Error; err != nil {
+		return nil, 0, err
+	}
+	
+	return comments, count, nil
 }
 
 // Get a particular comment including the associated author

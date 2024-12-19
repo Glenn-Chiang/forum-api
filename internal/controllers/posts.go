@@ -45,6 +45,7 @@ func (controller *PostController) GetList(ctx *gin.Context) {
 	sortBy := ctx.DefaultQuery("sort", "new")
 
 	var posts []models.Post
+	var totalCount int64 // Total number of filtered posts, not just those included in the current page
 
 	// Get the "tag" query param
 	// We allow the url to contain multiple values for the "tag" param, which will be parsed as an array of ints referring to topic IDs
@@ -52,7 +53,7 @@ func (controller *PostController) GetList(ctx *gin.Context) {
 
 	// If no tags are specified, don't filter
 	if len(tags) == 0 {
-		posts, err = controller.postService.GetList(limit, offset, sortBy)
+		posts, totalCount, err = controller.postService.GetList(limit, offset, sortBy)
 		if err != nil {
 			errs.HTTPErrorResponse(ctx, err)
 			return
@@ -69,22 +70,15 @@ func (controller *PostController) GetList(ctx *gin.Context) {
 			topicIDs = append(topicIDs, uint(topicID))
 		}
 
-		posts, err = controller.postService.GetByTags(topicIDs, limit, offset, sortBy)
+		posts, totalCount, err = controller.postService.GetByTags(topicIDs, limit, offset, sortBy)
 		if err != nil {
 			errs.HTTPErrorResponse(ctx, err)
 			return
 		}
 	}
 
-	// Get total number of posts
-	postCount, err := controller.postService.GetTotalCount()
-	if err != nil {
-		errs.HTTPErrorResponse(ctx, err)
-		return
-	}
-
 	// Send list of posts together with total count
-	ctx.IndentedJSON(http.StatusOK, gin.H{"data": posts, "total_count": postCount})
+	ctx.IndentedJSON(http.StatusOK, gin.H{"data": posts, "total_count": totalCount})
 }
 
 // GET /posts/:id

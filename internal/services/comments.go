@@ -35,21 +35,21 @@ func validCommentSortField(sortBy string) (string, error) {
 }
 
 // Get all comments associated with a specified post
-func (service *CommentService) GetByPostID(postId uint, limit int, offset int, sortBy string) ([]models.Comment, error) {
+func (service *CommentService) GetByPostID(postId uint, limit int, offset int, sortBy string) ([]models.Comment, int64, error) {
 	// Validate sortBy param
 	sortField, err := validCommentSortField(sortBy)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	comments, err := service.commentRepo.GetByPostID(postId, limit, offset, sortField)
+	comments, count, err := service.commentRepo.GetByPostID(postId, limit, offset, sortField)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errs.New(errs.ErrNotFound, "Post not found")
+			return nil, 0, errs.New(errs.ErrNotFound, "Post not found")
 		}
-		return nil, err
+		return nil, 0, err
 	}
-	return comments, nil
+	return comments, count, nil
 }
 
 // Get an individual comment by ID
@@ -62,11 +62,6 @@ func (service *CommentService) GetByID(id uint) (*models.Comment, error) {
 		return nil, err
 	}
 	return comment, nil
-}
-
-// Get total number of comments
-func (service *CommentService) GetTotalCount() (int64, error) {
-	return service.commentRepo.GetTotalCount()
 }
 
 // Create a new comment associated with a specific post and user

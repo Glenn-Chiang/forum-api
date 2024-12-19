@@ -14,36 +14,45 @@ func NewPostRepo(db *gorm.DB) *PostRepo {
 	return &PostRepo{DB: db}
 }
 
-// Get the total number of posts
-func (repo *PostRepo) GetTotalCount() (int64, error) {
-	var count int64
-	if err := repo.DB.Model(&models.Post{}).Count(&count).Error; err != nil {
-		return 0, err
-	}
-	return count, nil
-}
-
 // Get a list of all posts including their associated topics
-func (repo *PostRepo) GetList(limit, offset int, sortBy string) ([]models.Post, error) {
+// Also returns the total number of posts
+func (repo *PostRepo) GetList(limit, offset int, sortBy string) ([]models.Post, int64, error) {
 	var posts []models.Post
 	if err := repo.DB.Preload("Topics").Limit(limit).Offset(offset).Order(sortBy).Find(&posts).Error; err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return posts, nil
+	
+	// Get the total number of posts
+	var count int64
+	if err := repo.DB.Model(&models.Post{}).Count(&count).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return posts, count, nil
 }
 
 // Get all posts associated with at least 1 of the topics in the given list of topics
 // Returned records includes the associated topics of each post
-func (repo *PostRepo) GetByTopics(topicIDs []uint, limit, offset int, sortBy string) ([]models.Post, error) {
+// Also returns the total number of posts filtered by the topicIDs
+func (repo *PostRepo) GetByTopics(topicIDs []uint, limit, offset int, sortBy string) ([]models.Post, int64, error) {
 	var posts []models.Post
-	err := repo.DB.Preload("Topics").Joins("JOIN post_topics ON posts.id = post_topics.post_id").
-		Where("post_topics.topic_id IN ?", topicIDs).
-		Order(sortBy).
-		Find(&posts).Error
-	if err != nil {
-		return nil, err
+
+	// Apply filter
+	query := repo.DB
+	query = query.Joins("JOIN post_topics ON posts.id = post_topics.post_id").Where("post_topics.topic_id IN ?", topicIDs)
+
+	// Get the filtered, sorted and paginated posts
+	if err := query.Preload("Topics").Limit(limit).Offset(offset).Order(sortBy).Find(&posts).Error; err != nil {
+		return nil, 0, err
 	}
-	return posts, nil
+
+	// Get the total count of filtered posts
+	var count int64
+	if err := query.Model(&models.Post{}).Count(&count).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return posts, count, nil
 }
 
 // Get all posts made by a particular user, including the associated topics of each post
