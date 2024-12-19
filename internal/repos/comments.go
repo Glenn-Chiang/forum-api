@@ -14,18 +14,10 @@ func NewCommentRepo(db *gorm.DB) *CommentRepo {
 	return &CommentRepo{DB: db}
 }
 
-func (repo *CommentRepo) GetAll() ([]models.Comment, error) {
-	var comments []models.Comment
-	if err := repo.DB.Find(&comments).Error; err != nil {
-		return nil, err
-	}
-	return comments, nil
-}
-
 // Get all comments associated with the given post. Each comment includes the associated author.
-func (repo *CommentRepo) GetByPostID(postId uint) ([]models.Comment, error) {
+func (repo *CommentRepo) GetByPostID(postId uint, limit int, offset int, sortBy string) ([]models.Comment, error) {
 	var comments []models.Comment
-	if err := repo.DB.Preload("Author").Find(&comments, models.Comment{PostID: postId}).Error; err != nil {
+	if err := repo.DB.Preload("Author").Limit(limit).Offset(offset).Order(sortBy).Find(&comments, models.Comment{PostID: postId}).Error; err != nil {
 		return nil, err
 	}
 	return comments, nil

@@ -18,31 +18,39 @@ func NewPostService(postRepo repos.PostRepo, userRepo repos.UserRepo) *PostServi
 	return &PostService{postRepo, userRepo}
 }
 
-// Valid fields by which posts can be sorted
-var validSortFields = map[string]bool{
-	"created_at": true,
-	"updated_at": true,
+// Maps valid sort params to the corresponding SQL orderBy clause
+var postSortFields = map[string]string{
+	"new": "created_at DESC",
+	"old": "created_at ASC",
 }
 
-// Check if the sortBy parameter refers to a valid sort field
-func validSortField (sortBy string) bool {
-	return validSortFields[sortBy]
-} 
-
-// Get a list of posts 
-func (service *PostService) GetList(limit, offset int, sortBy string) ([]models.Post, error) {
-	if (!validSortField(sortBy)) {
-		return nil, errs.New(errs.ErrInvalid, "Invalid sort field")
+// Get the SQL orderBy clause corresponding to the given sort param, if valid
+func validPostSortField(sortBy string) (string, error) {
+	sortField, exists := postSortFields[sortBy]
+	if !exists {
+		return "", errs.New(errs.ErrInvalid, "Invalid sort field")
 	}
-	return service.postRepo.GetList(limit, offset, sortBy)
+	return sortField, nil
+}
+
+// Get a list of posts
+func (service *PostService) GetList(limit, offset int, sortBy string) ([]models.Post, error) {
+	// Validate sortBy param
+	sortField, err := validPostSortField(sortBy) 
+	if err != nil {
+		return nil, err
+	}
+	return service.postRepo.GetList(limit, offset, sortField)
 }
 
 // Get all posts tagged with the specified topic
 func (service *PostService) GetByTopic(topicID uint, limit, offset int, sortBy string) ([]models.Post, error) {
-	if (!validSortField(sortBy)) {
-		return nil, errs.New(errs.ErrInvalid, "Invalid sort field")
+	// Validate sortBy param
+	sortField, err := validPostSortField(sortBy) 
+	if err != nil {
+		return nil, err
 	}
-	return service.postRepo.GetByTopic(topicID, limit, offset, sortBy)
+	return service.postRepo.GetByTopic(topicID, limit, offset, sortField)
 }
 
 // Get an individual post by ID

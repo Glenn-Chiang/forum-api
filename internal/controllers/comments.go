@@ -21,13 +21,32 @@ func NewCommentController(service services.CommentService) *CommentController {
 
 // GET /posts/:id/comments
 func (controller *CommentController) GetByPostID(ctx *gin.Context) {
+	// Validate postId param
 	postId, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
 		return
 	}
 
-	comments, err := controller.service.GetByPostID(uint(postId))
+	page, err := strconv.Atoi(ctx.DefaultQuery("page", "1"))
+	if err != nil || page < 1 {
+		page = 1 // If invalid, just set to default
+	}
+
+	// Limit refers to number of records per page
+	// Get the "limit" query param and validate it
+	limit, err := strconv.Atoi(ctx.DefaultQuery("limit", "10"))
+	if err != nil || limit < 1 {
+		limit = 10 // If invalid, just set to default
+	}
+
+	// Pagination offset: The DB will fetch {limit} number of records starting from the record at this index.
+	offset := (page - 1) * limit
+
+	// Get the "sortBy" query param and validate it
+	sortBy := ctx.DefaultQuery("sortBy", "new")
+
+	comments, err := controller.service.GetByPostID(uint(postId), limit, offset, sortBy)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -145,7 +164,7 @@ func (controller *CommentController) Delete(ctx *gin.Context) {
 	}
 
 	// Check that the authorID of the comment corresponds to the currently authenticated user's ID
-	if user.ID != comment.AuthorID { 
+	if user.ID != comment.AuthorID {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}

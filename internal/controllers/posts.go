@@ -41,7 +41,7 @@ func (controller *PostController) GetList(ctx *gin.Context) {
 	offset := (page - 1) * limit
 
 	// Get the "sortBy" query param and validate it
-	sortBy := ctx.DefaultQuery("sortBy", "created_at")
+	sortBy := ctx.DefaultQuery("sortBy", "new")
 
 	var posts []models.Post
 

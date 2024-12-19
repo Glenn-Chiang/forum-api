@@ -11,16 +11,45 @@ import (
 
 type CommentService struct {
 	commentRepo repos.CommentRepo
-	postRepo repos.PostRepo
-	userRepo repos.UserRepo
+	postRepo    repos.PostRepo
+	userRepo    repos.UserRepo
 }
 
 func NewCommentService(commentRepo repos.CommentRepo, postRepo repos.PostRepo, userRepo repos.UserRepo) *CommentService {
 	return &CommentService{commentRepo, postRepo, userRepo}
 }
 
-func (service *CommentService) GetAll() ([]models.Comment, error) {
-	return service.commentRepo.GetAll()
+// Maps valid sort params to the corresponding SQL orderBy clause
+var commentSortFields = map[string]string{
+	"new": "created_at DESC",
+	"old": "created_at ASC",
+}
+
+// Get the SQL orderBy clause corresponding to the given sort param, if valid
+func validCommentSortField(sortBy string) (string, error) {
+	sortField, exists := commentSortFields[sortBy]
+	if !exists {
+		return "", errs.New(errs.ErrInvalid, "Invalid sort field")
+	}
+	return sortField, nil
+}
+
+// Get all comments associated with a specified post
+func (service *CommentService) GetByPostID(postId uint, limit int, offset int, sortBy string) ([]models.Comment, error) {
+	// Validate sortBy param
+	sortField, err := validCommentSortField(sortBy)
+	if err != nil {
+		return nil, err
+	}
+
+	comments, err := service.commentRepo.GetByPostID(postId, limit, offset, sortField)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errs.New(errs.ErrNotFound, "Post not found")
+		}
+		return nil, err
+	}
+	return comments, nil
 }
 
 // Get an individual comment by ID
@@ -33,18 +62,6 @@ func (service *CommentService) GetByID(id uint) (*models.Comment, error) {
 		return nil, err
 	}
 	return comment, nil
-}
-
-// Get all comments associated with a specified post
-func (service *CommentService) GetByPostID(id uint) ([]models.Comment, error) {
-	comments, err := service.commentRepo.GetByPostID(id)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errs.New(errs.ErrNotFound, "Post not found")
-		}
-		return nil, err
-	}
-	return comments, nil
 }
 
 // Create a new comment associated with a specific post and user
@@ -81,4 +98,3 @@ func (service *CommentService) Delete(id uint) error {
 	}
 	return nil
 }
-
