@@ -5,6 +5,7 @@ import (
 	"cvwo-backend/internal/middleware"
 	"cvwo-backend/internal/models"
 	"cvwo-backend/internal/services"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -40,28 +41,35 @@ func (controller *PostController) GetList(ctx *gin.Context) {
 	// Pagination offset: The DB will fetch {limit} number of records starting from the record at this index.
 	offset := (page - 1) * limit
 
-	// Get the "sortBy" query param and validate it
-	sortBy := ctx.DefaultQuery("sort_by", "new")
+	// Get the "sort" query param and validate it
+	sortBy := ctx.DefaultQuery("sort", "new")
 
 	var posts []models.Post
 
-	topicIdParam := ctx.Query("topic_id")
+	// Get the "tag" query param
+	// We allow the url to contain multiple values for the "tag" param, which will be parsed as an array of ints referring to topic IDs
+	tags := ctx.QueryArray("tag")
 
-	// If no topicId is specified
-	if topicIdParam == "" {
+	// If no tags are specified, don't filter
+	if len(tags) == 0 {
 		posts, err = controller.postService.GetList(limit, offset, sortBy)
 		if err != nil {
 			errs.HTTPErrorResponse(ctx, err)
 			return
 		}
-		// If topicId is specified, check if it is valid
+		// If tags are specified, validate them and parse into an array of topic IDs
 	} else {
-		topicId, err := strconv.Atoi(topicIdParam)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid topic ID"})
-			return
+		var topicIDs []uint
+		for _, tag := range tags {
+			topicID, err := strconv.Atoi(tag)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Invalid topic ID: %v", topicID)})
+				return
+			}
+			topicIDs = append(topicIDs, uint(topicID))
 		}
-		posts, err = controller.postService.GetByTopic(uint(topicId), limit, offset, sortBy)
+
+		posts, err = controller.postService.GetByTags(topicIDs, limit, offset, sortBy)
 		if err != nil {
 			errs.HTTPErrorResponse(ctx, err)
 			return

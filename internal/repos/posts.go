@@ -32,11 +32,12 @@ func (repo *PostRepo) GetList(limit, offset int, sortBy string) ([]models.Post, 
 	return posts, nil
 }
 
-// Get all posts associated with a particular topic. Includes the associated topics of each post.
-func (repo *PostRepo) GetByTopic(topicId uint, limit, offset int, sortBy string) ([]models.Post, error) {
+// Get all posts associated with at least 1 of the topics in the given list of topics
+// Returned records includes the associated topics of each post
+func (repo *PostRepo) GetByTopics(topicIDs []uint, limit, offset int, sortBy string) ([]models.Post, error) {
 	var posts []models.Post
 	err := repo.DB.Preload("Topics").Joins("JOIN post_topics ON posts.id = post_topics.post_id").
-		Where("post_topics.topic_id = ?", topicId).
+		Where("post_topics.topic_id IN ?", topicIDs).
 		Order(sortBy).
 		Find(&posts).Error
 	if err != nil {

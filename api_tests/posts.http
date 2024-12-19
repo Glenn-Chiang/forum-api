@@ -1,8 +1,8 @@
 ### Get all posts
-GET {{baseUrl}}/posts?sort_by=new
+GET {{baseUrl}}/posts?sort=new
 
 ### Get paginated, sorted, filtered list of posts
-GET {{baseUrl}}/posts?limit=5
+GET {{baseUrl}}/posts?tag=1&tag=2
 
 ### Get post by ID
 # @prompt id

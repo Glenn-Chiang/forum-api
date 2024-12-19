@@ -26,6 +26,8 @@ func HTTPErrorResponse(ctx *gin.Context, err error) {
 		ctx.JSON(http.StatusConflict, errorResponseBody(e))
 	case ErrInternal:
 		ctx.JSON(http.StatusInternalServerError, errorResponseBody(e))
+	default:
+		ctx.JSON(http.StatusInternalServerError, errorResponseBody(e))
 	}
 }
 

@@ -10,8 +10,8 @@ import (
 )
 
 type PostService struct {
-	postRepo repos.PostRepo
-	userRepo repos.UserRepo
+	postRepo  repos.PostRepo
+	userRepo  repos.UserRepo
 	topicRepo repos.TopicRepo
 }
 
@@ -37,31 +37,22 @@ func validPostSortField(sortBy string) (string, error) {
 // Get a list of posts
 func (service *PostService) GetList(limit, offset int, sortBy string) ([]models.Post, error) {
 	// Validate sortBy param
-	sortField, err := validPostSortField(sortBy) 
+	sortField, err := validPostSortField(sortBy)
 	if err != nil {
 		return nil, err
 	}
 	return service.postRepo.GetList(limit, offset, sortField)
 }
 
-// Get all posts tagged with the specified topic
-func (service *PostService) GetByTopic(topicID uint, limit, offset int, sortBy string) ([]models.Post, error) {
+// Get all posts tagged with at least 1 of the given topics
+func (service *PostService) GetByTags(topicIDs []uint, limit, offset int, sortBy string) ([]models.Post, error) {
 	// Validate sortBy param
-	sortField, err := validPostSortField(sortBy) 
+	sortField, err := validPostSortField(sortBy)
 	if err != nil {
 		return nil, err
 	}
 
-	// Check if topicID corresponds to an existing topic
-	_, err = service.topicRepo.GetByID(topicID)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errs.New(errs.ErrNotFound, "Topic not found")
-		}
-		return nil, err
-	}
-
-	return service.postRepo.GetByTopic(topicID, limit, offset, sortField)
+	return service.postRepo.GetByTopics(topicIDs, limit, offset, sortField)
 }
 
 // Get an individual post by ID

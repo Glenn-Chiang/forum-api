@@ -29,6 +29,7 @@ func (controller *AuthController) Login(ctx *gin.Context) {
 	user, token, err := controller.service.Authenticate(&authInput)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
+		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"token": token, "user": user})
