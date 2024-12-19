@@ -37,7 +37,7 @@ func main() {
 	
 	// Services (business logic)
 	userService := services.NewUserService(*userRepo)
-	postService := services.NewPostService(*postRepo, *userRepo)
+	postService := services.NewPostService(*postRepo, *userRepo, *topicRepo)
 	commentService := services.NewCommentService(*commentRepo, *postRepo, *userRepo)
 	topicService := services.NewTopicService(*topicRepo)
 	taggingService := services.NewTaggingService(*postRepo, *topicRepo)

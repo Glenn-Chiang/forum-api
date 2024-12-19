@@ -30,3 +30,12 @@ func (repo *TopicRepo) GetByIDs(ids []uint) ([]models.Topic, error){
 	}
 	return topics, nil
 }
+
+// Get the topic with the given ID
+func (repo *TopicRepo) GetByID(id uint) (*models.Topic, error) {
+	var topic models.Topic
+	if err := repo.DB.First(&topic, id).Error; err != nil {
+		return nil, err
+	}
+	return &topic, nil
+}

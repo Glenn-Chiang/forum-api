@@ -12,10 +12,11 @@ import (
 type PostService struct {
 	postRepo repos.PostRepo
 	userRepo repos.UserRepo
+	topicRepo repos.TopicRepo
 }
 
-func NewPostService(postRepo repos.PostRepo, userRepo repos.UserRepo) *PostService {
-	return &PostService{postRepo, userRepo}
+func NewPostService(postRepo repos.PostRepo, userRepo repos.UserRepo, topicRepo repos.TopicRepo) *PostService {
+	return &PostService{postRepo, userRepo, topicRepo}
 }
 
 // Maps valid sort params to the corresponding SQL orderBy clause
@@ -50,6 +51,16 @@ func (service *PostService) GetByTopic(topicID uint, limit, offset int, sortBy s
 	if err != nil {
 		return nil, err
 	}
+
+	// Check if topicID corresponds to an existing topic
+	_, err = service.topicRepo.GetByID(topicID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errs.New(errs.ErrNotFound, "Topic not found")
+		}
+		return nil, err
+	}
+
 	return service.postRepo.GetByTopic(topicID, limit, offset, sortField)
 }
 
@@ -60,6 +71,7 @@ func (service *PostService) GetByID(id uint) (*models.Post, error) {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errs.New(errs.ErrNotFound, "Post not found")
 		}
+		return nil, err
 	}
 	return post, nil
 }
