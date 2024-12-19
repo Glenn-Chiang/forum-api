@@ -4,7 +4,6 @@ import (
 	errs "cvwo-backend/internal/errors"
 	"cvwo-backend/internal/middleware"
 	"cvwo-backend/internal/models"
-	"cvwo-backend/internal/repos"
 	"cvwo-backend/internal/services"
 	"net/http"
 	"strconv"
@@ -42,13 +41,7 @@ func (controller *PostController) GetList(ctx *gin.Context) {
 	offset := (page - 1) * limit
 
 	// Get the "sortBy" query param and validate it
-	sortBy := ctx.DefaultQuery("sortBy", repos.SortByRecent)
-	switch sortBy {
-	case repos.SortByRecent:
-	default:
-		ctx.JSON(400, gin.H{"error": "Invalid sort field"})
-        return
-	}
+	sortBy := ctx.DefaultQuery("sortBy", "created_at")
 
 	var posts []models.Post
 

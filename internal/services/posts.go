@@ -18,12 +18,30 @@ func NewPostService(postRepo repos.PostRepo, userRepo repos.UserRepo) *PostServi
 	return &PostService{postRepo, userRepo}
 }
 
+// Valid fields by which posts can be sorted
+var validSortFields = map[string]bool{
+	"created_at": true,
+	"updated_at": true,
+}
+
+// Check if the sortBy parameter refers to a valid sort field
+func validSortField (sortBy string) bool {
+	return validSortFields[sortBy]
+} 
+
+// Get a list of posts 
 func (service *PostService) GetList(limit, offset int, sortBy string) ([]models.Post, error) {
+	if (!validSortField(sortBy)) {
+		return nil, errs.New(errs.ErrInvalid, "Invalid sort field")
+	}
 	return service.postRepo.GetList(limit, offset, sortBy)
 }
 
 // Get all posts tagged with the specified topic
 func (service *PostService) GetByTopic(topicID uint, limit, offset int, sortBy string) ([]models.Post, error) {
+	if (!validSortField(sortBy)) {
+		return nil, errs.New(errs.ErrInvalid, "Invalid sort field")
+	}
 	return service.postRepo.GetByTopic(topicID, limit, offset, sortBy)
 }
 

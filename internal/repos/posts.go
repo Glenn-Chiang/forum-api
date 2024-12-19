@@ -15,16 +15,10 @@ func NewPostRepo(db *gorm.DB) *PostRepo {
 	return &PostRepo{DB: db}
 }
 
-// Sorting methods
-
-const (
-	SortByRecent = "created_at"
-)
-
 // Get a list of all posts including their associated topics
 func (repo *PostRepo) GetList(limit, offset int, sortBy string) ([]models.Post, error) {
 	var posts []models.Post
-	if err := repo.DB.Preload("Topics").Limit(limit).Offset(offset).Order(fmt.Sprintf("%s %s", SortByRecent, "DESC")).Find(&posts).Error; err != nil {
+	if err := repo.DB.Preload("Topics").Limit(limit).Offset(offset).Order(fmt.Sprintf("%s %s", sortBy, "DESC")).Find(&posts).Error; err != nil {
 		return nil, err
 	}
 	return posts, nil

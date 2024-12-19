@@ -1,5 +1,5 @@
 ### Get all posts
-GET {{baseUrl}}/posts
+GET {{baseUrl}}/posts?sortBy=created_at
 
 ### Get paginated list of posts
 GET {{baseUrl}}/posts?page=1&limit=2
