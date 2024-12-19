@@ -14,6 +14,15 @@ func NewCommentRepo(db *gorm.DB) *CommentRepo {
 	return &CommentRepo{DB: db}
 }
 
+// Get the total number of comments
+func (repo *CommentRepo) GetTotalCount() (int64, error) {
+	var count int64
+	if err := repo.DB.Model(&models.Comment{}).Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 // Get all comments associated with the given post. Each comment includes the associated author.
 func (repo *CommentRepo) GetByPostID(postId uint, limit int, offset int, sortBy string) ([]models.Comment, error) {
 	var comments []models.Comment

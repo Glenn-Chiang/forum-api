@@ -14,6 +14,15 @@ func NewPostRepo(db *gorm.DB) *PostRepo {
 	return &PostRepo{DB: db}
 }
 
+// Get the total number of posts
+func (repo *PostRepo) GetTotalCount() (int64, error) {
+	var count int64
+	if err := repo.DB.Model(&models.Post{}).Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 // Get a list of all posts including their associated topics
 func (repo *PostRepo) GetList(limit, offset int, sortBy string) ([]models.Post, error) {
 	var posts []models.Post

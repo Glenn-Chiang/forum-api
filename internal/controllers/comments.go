@@ -44,15 +44,24 @@ func (controller *CommentController) GetByPostID(ctx *gin.Context) {
 	offset := (page - 1) * limit
 
 	// Get the "sortBy" query param and validate it
-	sortBy := ctx.DefaultQuery("sortBy", "new")
+	sortBy := ctx.DefaultQuery("sort_by", "new")
 
+	// Get the list of comments
 	comments, err := controller.service.GetByPostID(uint(postId), limit, offset, sortBy)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
 
-	ctx.IndentedJSON(http.StatusOK, comments)
+	// Get total number of comments
+	commentCount, err := controller.service.GetTotalCount()
+	if err != nil {
+		errs.HTTPErrorResponse(ctx, err)
+		return
+	}
+
+	// Send list of comments together with total count
+	ctx.IndentedJSON(http.StatusOK, gin.H{"data": comments, "total_count": commentCount})
 }
 
 // POST /comments

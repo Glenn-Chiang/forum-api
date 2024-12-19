@@ -64,6 +64,11 @@ func (service *CommentService) GetByID(id uint) (*models.Comment, error) {
 	return comment, nil
 }
 
+// Get total number of comments
+func (service *CommentService) GetTotalCount() (int64, error) {
+	return service.commentRepo.GetTotalCount()
+}
+
 // Create a new comment associated with a specific post and user
 func (service *CommentService) Create(commentData *models.Comment) (*models.Comment, error) {
 	comment, err := service.commentRepo.Create(commentData)

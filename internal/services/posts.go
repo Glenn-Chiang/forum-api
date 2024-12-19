@@ -76,6 +76,11 @@ func (service *PostService) GetByID(id uint) (*models.Post, error) {
 	return post, nil
 }
 
+// Get total number of posts
+func (service *PostService) GetTotalCount() (int64, error) {
+	return service.postRepo.GetTotalCount()
+}
+
 // Create a new post
 func (service *PostService) Create(postData *models.Post) (*models.Post, error) {
 	post, err := service.postRepo.Create(postData)

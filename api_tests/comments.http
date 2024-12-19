@@ -1,5 +1,5 @@
 ### Get list of comments under the specified post
-GET {{baseUrl}}/posts/2/comments?limit=5
+GET {{baseUrl}}/posts/2/comments?page=1
 
 ### Create comment
 POST {{baseUrl}}/comments

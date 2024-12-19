@@ -41,7 +41,7 @@ func (controller *PostController) GetList(ctx *gin.Context) {
 	offset := (page - 1) * limit
 
 	// Get the "sortBy" query param and validate it
-	sortBy := ctx.DefaultQuery("sortBy", "new")
+	sortBy := ctx.DefaultQuery("sort_by", "new")
 
 	var posts []models.Post
 
@@ -58,7 +58,7 @@ func (controller *PostController) GetList(ctx *gin.Context) {
 	} else {
 		topicId, err := strconv.Atoi(topicIdParam)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid topic_id"})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid topic ID"})
 			return
 		}
 		posts, err = controller.postService.GetByTopic(uint(topicId), limit, offset, sortBy)
@@ -68,7 +68,15 @@ func (controller *PostController) GetList(ctx *gin.Context) {
 		}
 	}
 
-	ctx.IndentedJSON(http.StatusOK, posts)
+	// Get total number of posts
+	postCount, err := controller.postService.GetTotalCount()
+	if err != nil {
+		errs.HTTPErrorResponse(ctx, err)
+		return
+	}
+
+	// Send list of posts together with total count
+	ctx.IndentedJSON(http.StatusOK, gin.H{"data": posts, "total_count": postCount})
 }
 
 // GET /posts/:id
