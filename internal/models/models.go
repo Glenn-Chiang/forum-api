@@ -4,69 +4,80 @@ import "time"
 
 type User struct {
 	ID       uint   `json:"id"`
-	Username string `gorm:"uniqueIndex" json:"username"`
-	Password string `json:"-"` // Hashed password, excluded from JSON
+	Username string `gorm:"uniqueIndex;not null" json:"username"`
+	Password string `gorm:"not null" json:"-"` // Hashed password, excluded from JSON
 }
 
+// Structure of request body for login/register
 type AuthInput struct {
-	Username string `gorm:"uniqueIndex" json:"username" binding:"required,max=20"`
+	Username string `binding:"required,max=20"`
 	Password string `binding:"required,min=5,max=20"`
 }
 
 type Post struct {
 	ID        uint      `json:"id"`
-	Title     string    `json:"title"`
-	Content   string    `json:"content"`
+	Title     string    `gorm:"not null" json:"title"`
+	Content   string    `gorm:"not null" json:"content"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	AuthorID  uint      `json:"author_id"`
-	Author    *User     `gorm:"constraint:OnDelete:SET NULL;" json:"author,omitempty"`
-	Topics    []Topic   `gorm:"many2many:post_topics;constraint:OnDelete:CASCADE;" json:"topics"`
+	// One post has one author (user). When the associated user is deleted, set the author field to null
+	Author    *User     `gorm:"constraint:OnDelete:SET NULL;" json:"author,omitempty"` 
+	// Implicitly create a many2many join table between posts and topics. When a post is deleted, the post_topic record in the join table is deleted. The associated topics themselves are not deleted.
+	Topics    []Topic   `gorm:"many2many:post_topics;constraint:OnDelete:CASCADE;" json:"topics"` 
+	// One post has many votes
+	Votes []Vote `json:"votes"`
+}
+
+// Record for one user's vote on one post
+type Vote struct {
+	UserID uint `gorm:"primaryKey;autoIncrement:false" json:"user_id"` // Composite primary key
+	PostID uint `gorm:"primaryKey;autoIncrement:false" json:"post_id"`
+	Value int `gorm:"not null" json:"vote"` // default: 0, upvote: 1, downvote: -1
 }
 
 // Structure of request body for creating a new post
 type NewPost struct {
-	Title    string `json:"title" binding:"required,max=200"`
-	Content  string `json:"content" binding:"required,min=10,max=1000"`
-	AuthorID uint   `json:"author_id" binding:"required"`
-	TopicIDs []uint `json:"topic_ids"`
+	Title    string `binding:"required,max=200"`
+	Content  string `binding:"required,min=10,max=1000"`
+	AuthorID uint   `binding:"required"`
+	TopicIDs []uint 
 }
 
 // Structure of request body for updating a post
 type PostUpdate struct {
-	Title   string `json:"title" binding:"required,max=200"`
-	Content string `json:"content" binding:"required,min=10,max=1000"`
+	Title   string `binding:"required,max=200"`
+	Content string `binding:"required,min=10,max=1000"`
 }
 
 // Structure of request body for updating the topics associated with a post
 type PostTagsUpdate struct {
-	TopicIDs []uint `json:"topic_ids"`
+	TopicIDs []uint 
 }
 
 type Comment struct {
 	ID        uint      `json:"id"`
-	Content   string    `json:"content"`
+	Content   string    `gorm:"not null" json:"content"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-	PostID    uint      `json:"post_id"`
+	PostID    uint      `json:"post_id"` // By default, when the associated post is deleted, the comment remains but the post_id is set to null
 	AuthorID  uint      `json:"author_id"`
-	Author    User      `gorm:"constraint:OnDelete:SET NULL;" json:"author,omitempty"`
+	Author    User      `gorm:"constraint:OnDelete:SET NULL;" json:"author,omitempty"` // When the associated user is deleted, set the author field to null
 }
 
 // Structure of request body for creating a new comment
 type NewComment struct {
-	Content  string `json:"content" binding:"required,max=1000"`
-	PostID   uint   `json:"post_id" binding:"required"`
-	AuthorID uint   `json:"author_id" binding:"required"`
+	Content  string `binding:"required,max=1000"`
+	PostID   uint   `binding:"required"`
+	AuthorID uint   `binding:"required"`
 }
 
 // Structure of request body for updating a comment
 type CommentUpdate struct {
-	Content string `json:"content" binding:"required,max=1000"`
+	Content string `binding:"required,max=1000"`
 }
 
 type Topic struct {
 	ID    uint   `json:"id"`
-	Name  string `gorm:"uniqueIndex" json:"name"`
-	Posts []Post `gorm:"many2many:post_topics;constraint:OnDelete:CASCADE" json:"-"`
+	Name  string `gorm:"uniqueIndex;not null" json:"name"`
 }
