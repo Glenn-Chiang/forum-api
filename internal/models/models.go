@@ -22,7 +22,7 @@ type Post struct {
 	UpdatedAt time.Time `json:"updated_at"`
 	AuthorID  uint      `json:"author_id"`
 	// One post has one author (user). When the associated user is deleted, set the author field to null
-	Author    *User     `json:"author,omitempty" gorm:"constraint:OnDelete:SET NULL;"` 
+	Author    *User     `json:"author" gorm:"constraint:OnDelete:SET NULL;"` 
 	// Implicitly create a many2many join table between posts and topics. When a post is deleted, the post_topic record in the join table is deleted. The associated topics themselves are not deleted.
 	Topics    []Topic   `json:"topics" gorm:"many2many:post_topics;constraint:OnDelete:CASCADE;"` 
 	// Array of votes associated with this post. Not included in json.

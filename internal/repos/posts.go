@@ -70,17 +70,13 @@ func (repo *PostRepo) GetByTopics(topicIDs []uint, limit, offset int, sortBy str
 func (repo *PostRepo) GetByID(id uint) (*models.Post, error) {
 	var post models.Post
 
-	if err := repo.DB.First(&post, id).Error; err != nil {
-		return nil, err
-	}
-
 	err := repo.DB.Model(&models.Post{}).
+		Preload("Topics").Preload("Author"). // Include these fields in the returned post
 		Where("id = ?", id).
 		Select("posts.*, SUM(votes.value) AS net_votes"). // Calculate net votes
 		Joins("LEFT JOIN votes ON votes.post_id = posts.id").
 		Group("posts.id").
-		Preload("Votes").Preload("Topics").Preload("Author"). // Include these fields in the returned post
-		Scan(&post).Error
+		Find(&post).Error
 
 	if err != nil {
 		return nil, err
