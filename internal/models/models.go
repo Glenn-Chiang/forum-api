@@ -41,7 +41,6 @@ type Vote struct {
 type NewPost struct {
 	Title    string `binding:"required,max=200"`
 	Content  string `binding:"required,min=10,max=1000"`
-	AuthorID uint   `binding:"required"`
 	TopicIDs []uint 
 }
 
@@ -70,7 +69,6 @@ type Comment struct {
 type NewComment struct {
 	Content  string `binding:"required,max=1000"`
 	PostID   uint   `binding:"required"`
-	AuthorID uint   `binding:"required"`
 }
 
 // Structure of request body for updating a comment

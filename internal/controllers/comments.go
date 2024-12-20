@@ -73,17 +73,11 @@ func (controller *CommentController) Create(ctx *gin.Context) {
 		return
 	}
 
-	// Check that the authorID of the comment corresponds to the currently authenticated user's ID
-	if user.ID != requestBody.AuthorID {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
-
 	// Map fields from request body to Comment model
 	comment := models.Comment{
 		Content:  requestBody.Content,
 		PostID:   requestBody.PostID,
-		AuthorID: requestBody.AuthorID,
+		AuthorID: user.ID,
 	}
 
 	// Create new comment

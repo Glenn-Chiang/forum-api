@@ -113,12 +113,6 @@ func (controller *PostController) Create(ctx *gin.Context) {
 		return
 	}
 
-	// Check that the authorID of the post corresponds to the currently authenticated user's ID
-	if user.ID != requestBody.AuthorID {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
-
 	// Get the topics associated with the list of topic IDs
 	topics, err := controller.topicService.GetByIDs(requestBody.TopicIDs)
 	// Handle errors with fetching topics
@@ -131,7 +125,7 @@ func (controller *PostController) Create(ctx *gin.Context) {
 	post := models.Post{
 		Title:    requestBody.Title,
 		Content:  requestBody.Content,
-		AuthorID: requestBody.AuthorID,
+		AuthorID: user.ID,
 		Topics:   topics,
 	}
 
