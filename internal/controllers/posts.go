@@ -53,7 +53,7 @@ func (controller *PostController) GetList(ctx *gin.Context) {
 	tags := ctx.QueryArray("tag")
 
 	// Retrieve the authenticated user from context
-	user, err := middleware.GetUser(ctx)
+	user, err := middleware.GetUserOrNil(ctx)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -98,7 +98,7 @@ func (controller *PostController) GetByID(ctx *gin.Context) {
 	}
 
 	// Retrieve the authenticated user from context
-	user, err := middleware.GetUser(ctx)
+	user, err := middleware.GetUserOrNil(ctx)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -236,21 +236,8 @@ func (controller *PostController) UpdateTags(ctx *gin.Context) {
 		return
 	}
 
-	// Fetch the post to check its authorID
-	post, err := controller.postService.GetByID(uint(postID))
-	if err != nil {
-		errs.HTTPErrorResponse(ctx, err)
-		return
-	}
-
-	// Check that the post's authorID corresponds to the currently authenticated user's ID
-	if user.ID != post.AuthorID {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
-
 	// Update the post tags
-	if err := controller.taggingService.TagPostWithTopics(uint(postID), requestBody.TopicIDs); err != nil {
+	if err := controller.taggingService.TagPostWithTopics(uint(postID), requestBody.TopicIDs, user.ID); err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
@@ -288,13 +275,7 @@ func (controller *PostController) Vote(ctx *gin.Context) {
 		return
 	}
 
-	// Check that userID matches
-	if user.ID != uint(userID) {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
-
-	if err := controller.votingService.Vote(uint(postID), uint(userID), requestBody.Value); err != nil {
+	if err := controller.votingService.Vote(uint(postID), uint(userID), requestBody.Value, user.ID); err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
@@ -324,13 +305,7 @@ func (controller *PostController) DeleteVote(ctx *gin.Context) {
 		return
 	}
 
-	// Check that userID matches
-	if user.ID != uint(userID) {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
-
-	if err := controller.votingService.RemoveVote(uint(postID), uint(userID)); err != nil {
+	if err := controller.votingService.RemoveVote(uint(postID), uint(userID), user.ID); err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
 	}

@@ -5,7 +5,6 @@ import (
 	"cvwo-backend/internal/models"
 	"cvwo-backend/internal/repos"
 	"errors"
-	"net/http"
 
 	"gorm.io/gorm"
 )
@@ -102,7 +101,7 @@ func (service *PostService) Update(postID uint, title string, content string, cu
 
 	// Check authorization
 	if currentUserID != post.AuthorID {
-		return nil, errs.New(http.StatusUnauthorized, "Unauthorized")
+		return nil, errs.New(errs.ErrUnauthorized, "Unauthorized")
 	}
 
 	post, err = service.postRepo.Update(postID, title, content)
@@ -122,10 +121,8 @@ func (service *PostService) Delete(postID uint, currentUserID uint) error {
 	if err != nil {
 		return err
 	}
-
-	// Check authorization
 	if currentUserID != post.AuthorID {
-		return errs.New(http.StatusUnauthorized, "Unauthorized")
+		return errs.New(errs.ErrUnauthorized, "Unauthorized")
 	}
 
 	return service.postRepo.Delete(postID)

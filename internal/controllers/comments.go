@@ -46,8 +46,15 @@ func (controller *CommentController) GetByPostID(ctx *gin.Context) {
 	// Get the "sortBy" query param and validate it
 	sortBy := ctx.DefaultQuery("sort", "new")
 
+	// Retrieve the authenticated user from context
+	user, err := middleware.GetUserOrNil(ctx)
+	if err != nil {
+		errs.HTTPErrorResponse(ctx, err)
+		return
+	}
+
 	// Get the list of comments
-	comments, totalCount, err := controller.service.GetByPostID(uint(postId), limit, offset, sortBy)
+	comments, totalCount, err := controller.service.GetByPostID(uint(postId), limit, offset, sortBy, user.ID)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -106,19 +113,6 @@ func (controller *CommentController) Update(ctx *gin.Context) {
 		return
 	}
 
-	// Fetch the comment to check its authorID
-	comment, err := controller.service.GetByID(uint(id))
-	if err != nil {
-		errs.HTTPErrorResponse(ctx, err)
-		return
-	}
-
-	// Check that the authorID of the comment corresponds to the currently authenticated user's ID
-	if user.ID != comment.AuthorID {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
-
 	// Validate request body
 	var requestBody models.CommentUpdate
 	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
@@ -127,7 +121,7 @@ func (controller *CommentController) Update(ctx *gin.Context) {
 	}
 
 	// Update the comment
-	updatedComment, err := controller.service.Update(uint(id), requestBody.Content)
+	updatedComment, err := controller.service.Update(uint(id), requestBody.Content, user.ID)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -152,21 +146,8 @@ func (controller *CommentController) Delete(ctx *gin.Context) {
 		return
 	}
 
-	// Fetch the comment to check its authorID
-	comment, err := controller.service.GetByID(uint(id))
-	if err != nil {
-		errs.HTTPErrorResponse(ctx, err)
-		return
-	}
-
-	// Check that the authorID of the comment corresponds to the currently authenticated user's ID
-	if user.ID != comment.AuthorID {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
-
 	// Delete the comment
-	if err := controller.service.Delete(uint(id)); err != nil {
+	if err := controller.service.Delete(uint(id), user.ID); err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
 	}

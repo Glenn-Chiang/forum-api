@@ -35,14 +35,14 @@ func validCommentSortField(sortBy string) (string, error) {
 }
 
 // Get all comments associated with a specified post
-func (service *CommentService) GetByPostID(postId uint, limit int, offset int, sortBy string) ([]models.Comment, int64, error) {
+func (service *CommentService) GetByPostID(postId uint, limit int, offset int, sortBy string, currentUserID uint) ([]models.Comment, int64, error) {
 	// Validate sortBy param
 	sortField, err := validCommentSortField(sortBy)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	comments, count, err := service.commentRepo.GetByPostID(postId, limit, offset, sortField)
+	comments, count, err := service.commentRepo.GetByPostID(postId, limit, offset, sortField, currentUserID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, 0, errs.New(errs.ErrNotFound, "Post not found")
@@ -77,8 +77,18 @@ func (service *CommentService) Create(commentData *models.Comment) (*models.Comm
 }
 
 // Update the content of the given comment
-func (service *CommentService) Update(id uint, content string) (*models.Comment, error) {
-	comment, err := service.commentRepo.Update(id, content)
+func (service *CommentService) Update(commentID uint, content string, currentUserID uint) (*models.Comment, error) {
+	post, err := service.GetByID(commentID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check authorization
+	if currentUserID != post.AuthorID {
+		return nil, errs.New(errs.ErrUnauthorized, "Unauthorized")
+	}
+
+	comment, err := service.commentRepo.Update(commentID, content)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errs.New(errs.ErrNotFound, "Comment not found")
@@ -89,12 +99,15 @@ func (service *CommentService) Update(id uint, content string) (*models.Comment,
 }
 
 // Delete an individual comment
-func (service *CommentService) Delete(id uint) error {
-	if err := service.commentRepo.Delete(id); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errs.New(errs.ErrNotFound, "Comment not found")
-		}
+func (service *CommentService) Delete(commentID uint, currentUserID uint) error {
+	// Check authorization
+	comment, err := service.GetByID(commentID)
+	if err != nil {
 		return err
 	}
-	return nil
+	if currentUserID != comment.AuthorID {
+		return errs.New(errs.ErrUnauthorized, "Unauthorized")
+	}
+
+	return service.commentRepo.Delete(commentID); 
 }

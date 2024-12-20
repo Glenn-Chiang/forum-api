@@ -49,7 +49,7 @@ func (authMiddleware *AuthMiddleware) CheckAuth(ctx *gin.Context) {
 	ctx.Next()
 }
 
-// Retrieve the authenticated user from the context
+// Retrieve the authenticated user from the context; errir if not authenticated
 func GetUser(ctx *gin.Context) (*models.User, error) {
 	value, exists := ctx.Get("user")
 	if !exists {
@@ -63,7 +63,7 @@ func GetUser(ctx *gin.Context) (*models.User, error) {
 }
 
 // Retrieve the authenticated user from the context; no error if not authenticated
-func GetUserIfExists(ctx *gin.Context) (*models.User, error) {
+func GetUserOrNil(ctx *gin.Context) (*models.User, error) {
 	value, exists := ctx.Get("user")
 	if !exists {
 		return nil, nil

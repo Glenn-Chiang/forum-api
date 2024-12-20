@@ -15,7 +15,7 @@ func NewCommentRepo(db *gorm.DB) *CommentRepo {
 }
 
 // Get all comments associated with the given post. Each comment includes the associated author.
-func (repo *CommentRepo) GetByPostID(postId uint, limit int, offset int, sortBy string) ([]models.Comment, int64, error) {
+func (repo *CommentRepo) GetByPostID(postId uint, limit int, offset int, sortBy string, currentUserID uint) ([]models.Comment, int64, error) {
 	var comments []models.Comment
 
 	// Apply filter

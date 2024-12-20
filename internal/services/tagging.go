@@ -1,6 +1,7 @@
 package services
 
 import (
+	errs "cvwo-backend/internal/errors"
 	"cvwo-backend/internal/repos"
 )
 
@@ -13,7 +14,7 @@ func NewTaggingService(postRepo repos.PostRepo, topicRepo repos.TopicRepo) *Tagg
 	return &TaggingService{postRepo, topicRepo}
 }
 
-func (service *TaggingService) TagPostWithTopics(postId uint, topicIDs []uint) error {
+func (service *TaggingService) TagPostWithTopics(postId uint, topicIDs []uint, currentUserID uint) error {
 	post, err := service.postRepo.GetByID(postId)
 	if err != nil {
 		return err
@@ -22,6 +23,11 @@ func (service *TaggingService) TagPostWithTopics(postId uint, topicIDs []uint) e
 	topics, err := service.topicRepo.GetByIDs(topicIDs)
 	if err != nil {
 		return err
+	}
+
+	// Check authorization
+	if currentUserID != post.AuthorID {
+		return errs.New(errs.ErrUnauthorized, "Unauthorized")
 	}
 
 	return service.postRepo.AssociatePostWithTopics(post, topics)
