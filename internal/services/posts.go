@@ -23,6 +23,7 @@ func NewPostService(postRepo repos.PostRepo, userRepo repos.UserRepo, topicRepo 
 var postSortFields = map[string]string{
 	"new": "created_at DESC",
 	"old": "created_at ASC",
+	"votes": "net_votes DESC",
 }
 
 // Get the SQL orderBy clause corresponding to the given sort param, if valid

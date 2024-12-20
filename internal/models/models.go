@@ -25,8 +25,10 @@ type Post struct {
 	Author    *User     `json:"author,omitempty" gorm:"constraint:OnDelete:SET NULL;"` 
 	// Implicitly create a many2many join table between posts and topics. When a post is deleted, the post_topic record in the join table is deleted. The associated topics themselves are not deleted.
 	Topics    []Topic   `json:"topics" gorm:"many2many:post_topics;constraint:OnDelete:CASCADE;"` 
-	// One post has many votes
-	Votes []Vote `json:"votes"`
+	// Array of votes associated with this post. Not included in json.
+	Votes []Vote `json:"-"`
+	// Upvotes - downvotes. net_votes is a computed field that is not included in the database schema
+	NetVotes int64 `json:"votes" gorm:"-"`
 }
 
 // Record for one user's vote on one post
@@ -34,12 +36,12 @@ type Vote struct {
 	// Composite primary key using post_id and user_id
 	PostID uint `json:"post_id" gorm:"primaryKey;autoIncrement:false" `
 	UserID uint `json:"user_id" gorm:"primaryKey;autoIncrement:false"` 
-	Value bool `json:"value" gorm:"not null"` //upvote: true, downvote: false
+	Value int `json:"value" gorm:"not null"` //upvote: 1, downvote: -1
 }
 
 // Request body for voting on a post
 type PostVote struct {
-	Value bool `json:"value"`
+	Value int `json:"value"`
 }
 
 // Request body for creating a new post

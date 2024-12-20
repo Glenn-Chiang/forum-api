@@ -14,7 +14,7 @@ func NewVotingService(repo repos.VoteRepo) *VotingService {
 }
 
 // Create a new vote associated to one user and one post, with a value of 1 indicating an upvote
-func (service *VotingService) Vote(postID, userID uint, value bool) error {
+func (service *VotingService) Vote(postID, userID uint, value int) error {
 	return service.repo.Upsert(&models.Vote{PostID: postID, UserID: userID, Value: value})
 }
 
