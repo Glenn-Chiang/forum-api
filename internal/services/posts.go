@@ -5,6 +5,7 @@ import (
 	"cvwo-backend/internal/models"
 	"cvwo-backend/internal/repos"
 	"errors"
+	"net/http"
 
 	"gorm.io/gorm"
 )
@@ -21,8 +22,8 @@ func NewPostService(postRepo repos.PostRepo, userRepo repos.UserRepo, topicRepo 
 
 // Maps valid sort params to the corresponding SQL orderBy clause
 var postSortFields = map[string]string{
-	"new": "created_at DESC",
-	"old": "created_at ASC",
+	"new":   "created_at DESC",
+	"old":   "created_at ASC",
 	"votes": "net_votes DESC",
 }
 
@@ -36,29 +37,41 @@ func validPostSortField(sortBy string) (string, error) {
 }
 
 // Get a list of posts
-func (service *PostService) GetList(limit, offset int, sortBy string) ([]models.Post, int64, error) {
+func (service *PostService) GetList(limit, offset int, sortBy string, currentUserID uint) ([]models.Post, int64, error) {
 	// Validate sortBy param
 	sortField, err := validPostSortField(sortBy)
 	if err != nil {
 		return nil, 0, err
 	}
-	return service.postRepo.GetList(limit, offset, sortField)
+	return service.postRepo.GetList(limit, offset, sortField, currentUserID)
 }
 
 // Get all posts tagged with at least 1 of the given topics
-func (service *PostService) GetByTags(topicIDs []uint, limit, offset int, sortBy string) ([]models.Post, int64, error) {
+func (service *PostService) GetByTags(topicIDs []uint, limit, offset int, sortBy string, currentUserID uint) ([]models.Post, int64, error) {
 	// Validate sortBy param
 	sortField, err := validPostSortField(sortBy)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	return service.postRepo.GetByTopics(topicIDs, limit, offset, sortField)
+	return service.postRepo.GetByTopics(topicIDs, limit, offset, sortField, currentUserID)
 }
 
 // Get an individual post by ID
-func (service *PostService) GetByID(id uint) (*models.Post, error) {
-	post, err := service.postRepo.GetByID(id)
+func (service *PostService) GetByID(postID uint) (*models.Post, error) {
+	post, err := service.postRepo.GetByID(postID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errs.New(errs.ErrNotFound, "Post not found")
+		}
+		return nil, err
+	}
+	return post, nil
+}
+
+// Get an individual post by ID, including additional fields associated with the authenticated user
+func (service *PostService) GetByIDWithAuth(postID uint, currentUserID uint) (*models.Post, error) {
+	post, err := service.postRepo.GetByIDWithAuth(postID, currentUserID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errs.New(errs.ErrNotFound, "Post not found")
@@ -81,8 +94,18 @@ func (service *PostService) Create(postData *models.Post) (*models.Post, error) 
 }
 
 // Update the title and content of the given post
-func (service *PostService) Update(id uint, title string, content string) (*models.Post, error) {
-	post, err := service.postRepo.Update(id, title, content)
+func (service *PostService) Update(postID uint, title string, content string, currentUserID uint) (*models.Post, error) {
+	post, err := service.GetByID(postID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check authorization
+	if currentUserID != post.AuthorID {
+		return nil, errs.New(http.StatusUnauthorized, "Unauthorized")
+	}
+
+	post, err = service.postRepo.Update(postID, title, content)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errs.New(errs.ErrNotFound, "Post not found")
@@ -93,12 +116,17 @@ func (service *PostService) Update(id uint, title string, content string) (*mode
 }
 
 // Delete an individual post
-func (service *PostService) Delete(id uint) error {
-	if err := service.postRepo.Delete(id); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errs.New(errs.ErrNotFound, "Post not found")
-		}
+func (service *PostService) Delete(postID uint, currentUserID uint) error {
+	// Check authorization
+	post, err := service.GetByID(postID)
+	if err != nil {
 		return err
 	}
-	return nil
+
+	// Check authorization
+	if currentUserID != post.AuthorID {
+		return errs.New(http.StatusUnauthorized, "Unauthorized")
+	}
+
+	return service.postRepo.Delete(postID)
 }

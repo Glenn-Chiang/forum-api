@@ -16,7 +16,7 @@ type PostController struct {
 	postService    services.PostService
 	topicService   services.TopicService
 	taggingService services.TaggingService
-	votingService services.VotingService
+	votingService  services.VotingService
 }
 
 func NewPostController(postService services.PostService, topicService services.TopicService, taggingService services.TaggingService, votingService services.VotingService) *PostController {
@@ -52,9 +52,16 @@ func (controller *PostController) GetList(ctx *gin.Context) {
 	// We allow the url to contain multiple values for the "tag" param, which will be parsed as an array of ints referring to topic IDs
 	tags := ctx.QueryArray("tag")
 
+	// Retrieve the authenticated user from context
+	user, err := middleware.GetUser(ctx)
+	if err != nil {
+		errs.HTTPErrorResponse(ctx, err)
+		return
+	}
+
 	// If no tags are specified, don't filter
 	if len(tags) == 0 {
-		posts, totalCount, err = controller.postService.GetList(limit, offset, sortBy)
+		posts, totalCount, err = controller.postService.GetList(limit, offset, sortBy, user.ID)
 		if err != nil {
 			errs.HTTPErrorResponse(ctx, err)
 			return
@@ -71,7 +78,7 @@ func (controller *PostController) GetList(ctx *gin.Context) {
 			topicIDs = append(topicIDs, uint(topicID))
 		}
 
-		posts, totalCount, err = controller.postService.GetByTags(topicIDs, limit, offset, sortBy)
+		posts, totalCount, err = controller.postService.GetByTags(topicIDs, limit, offset, sortBy, user.ID)
 		if err != nil {
 			errs.HTTPErrorResponse(ctx, err)
 			return
@@ -90,7 +97,14 @@ func (controller *PostController) GetByID(ctx *gin.Context) {
 		return
 	}
 
-	post, err := controller.postService.GetByID(uint(id))
+	// Retrieve the authenticated user from context
+	user, err := middleware.GetUser(ctx)
+	if err != nil {
+		errs.HTTPErrorResponse(ctx, err)
+		return
+	}
+
+	post, err := controller.postService.GetByIDWithAuth(uint(id), user.ID)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -108,7 +122,7 @@ func (controller *PostController) Create(ctx *gin.Context) {
 	}
 
 	// Retrieve the authenticated user from context
-	user, err := middleware.GetUserFromContext(ctx)
+	user, err := middleware.GetUser(ctx)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -157,33 +171,45 @@ func (controller *PostController) Update(ctx *gin.Context) {
 	}
 
 	// Retrieve the authenticated user from context
-	user, err := middleware.GetUserFromContext(ctx)
+	user, err := middleware.GetUser(ctx)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
-		return
-	}
-
-	// Fetch the post to check its authorID
-	post, err := controller.postService.GetByID(uint(postID))
-	if err != nil {
-		errs.HTTPErrorResponse(ctx, err)
-		return
-	}
-
-	// Check that the post's authorID corresponds to the currently authenticated user's ID
-	if user.ID != post.AuthorID {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
 	// Update the post
-	updatedPost, err := controller.postService.Update(uint(postID), requestBody.Title, requestBody.Content)
+	updatedPost, err := controller.postService.Update(uint(postID), requestBody.Title, requestBody.Content, user.ID)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
 
 	ctx.IndentedJSON(http.StatusOK, updatedPost)
+}
+
+// DELETE /posts/:id
+func (controller *PostController) Delete(ctx *gin.Context) {
+	// Validate postID
+	postID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
+		return
+	}
+
+	// Retrieve the authenticated user from context
+	user, err := middleware.GetUser(ctx)
+	if err != nil {
+		errs.HTTPErrorResponse(ctx, err)
+		return
+	}
+
+	// Delete the post
+	if err := controller.postService.Delete(uint(postID), user.ID); err != nil {
+		errs.HTTPErrorResponse(ctx, err)
+		return
+	}
+
+	ctx.Status(http.StatusNoContent)
 }
 
 // PUT /posts/:id/topics
@@ -204,7 +230,7 @@ func (controller *PostController) UpdateTags(ctx *gin.Context) {
 	}
 
 	// Retrieve the authenticated user from context
-	user, err := middleware.GetUserFromContext(ctx)
+	user, err := middleware.GetUser(ctx)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -225,44 +251,6 @@ func (controller *PostController) UpdateTags(ctx *gin.Context) {
 
 	// Update the post tags
 	if err := controller.taggingService.TagPostWithTopics(uint(postID), requestBody.TopicIDs); err != nil {
-		errs.HTTPErrorResponse(ctx, err)
-		return
-	}
-
-	ctx.Status(http.StatusNoContent)
-}
-
-// DELETE /posts/:id
-func (controller *PostController) Delete(ctx *gin.Context) {
-	// Validate postID
-	postID, err := strconv.Atoi(ctx.Param("id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
-		return
-	}
-
-	// Retrieve the authenticated user from context
-	user, err := middleware.GetUserFromContext(ctx)
-	if err != nil {
-		errs.HTTPErrorResponse(ctx, err)
-		return
-	}
-
-	// Fetch the post to check its authorID
-	post, err := controller.postService.GetByID(uint(postID))
-	if err != nil {
-		errs.HTTPErrorResponse(ctx, err)
-		return
-	}
-
-	// Check that the post's authorID corresponds to the currently authenticated user's ID
-	if user.ID != post.AuthorID {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
-
-	// Delete the post
-	if err := controller.postService.Delete(uint(postID)); err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
@@ -294,7 +282,7 @@ func (controller *PostController) Vote(ctx *gin.Context) {
 	}
 
 	// Retrieve the authenticated user from context
-	user, err := middleware.GetUserFromContext(ctx)
+	user, err := middleware.GetUser(ctx)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -330,7 +318,7 @@ func (controller *PostController) DeleteVote(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 	}
 	// Retrieve the authenticated user from context
-	user, err := middleware.GetUserFromContext(ctx)
+	user, err := middleware.GetUser(ctx)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return

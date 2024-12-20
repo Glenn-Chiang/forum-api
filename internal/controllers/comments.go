@@ -67,7 +67,7 @@ func (controller *CommentController) Create(ctx *gin.Context) {
 	}
 
 	// Retrieve the authenticated user from context
-	user, err := middleware.GetUserFromContext(ctx)
+	user, err := middleware.GetUser(ctx)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -100,7 +100,7 @@ func (controller *CommentController) Update(ctx *gin.Context) {
 	}
 
 	// Retrieve the authenticated user from context
-	user, err := middleware.GetUserFromContext(ctx)
+	user, err := middleware.GetUser(ctx)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -146,7 +146,7 @@ func (controller *CommentController) Delete(ctx *gin.Context) {
 	}
 
 	// Retrieve the authenticated user from context
-	user, err := middleware.GetUserFromContext(ctx)
+	user, err := middleware.GetUser(ctx)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return

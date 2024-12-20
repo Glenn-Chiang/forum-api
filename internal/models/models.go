@@ -21,7 +21,8 @@ type Post struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	AuthorID  uint      `json:"author_id"`
-	// One post has one author (user). When the associated user is deleted, set the author field to null
+	// One post has one author (user).
+	// If the associated user is deleted, set the author field to null
 	Author    *User     `json:"author" gorm:"constraint:OnDelete:SET NULL;"` 
 	// Implicitly create a many2many join table between posts and topics. When a post is deleted, the post_topic record in the join table is deleted. The associated topics themselves are not deleted.
 	Topics    []Topic   `json:"topics" gorm:"many2many:post_topics;constraint:OnDelete:CASCADE;"` 
@@ -29,6 +30,8 @@ type Post struct {
 	Votes []Vote `json:"-"`
 	// Upvotes - downvotes. net_votes is a computed field that is not included in the database schema
 	NetVotes int64 `json:"votes" gorm:"-"`
+	// Computed field indicating whether the current user has upvoted (1), downvoted (-1) or not voted (0) the post
+	UserVote int `json:"user_vote" gorm:"-"`
 }
 
 // Record for one user's vote on one post
@@ -69,7 +72,7 @@ type Comment struct {
 	UpdatedAt time.Time `json:"updated_at"`
 	PostID    uint      `json:"post_id"` // By default, when the associated post is deleted, the comment remains but the post_id is set to null
 	AuthorID  uint      `json:"author_id"`
-	Author    User      `gorm:"constraint:OnDelete:SET NULL;" json:"author,omitempty"` // When the associated user is deleted, set the author field to null
+	Author    User      `gorm:"constraint:OnDelete:SET NULL;" json:"author"` // When the associated user is deleted, set the author field to null
 }
 
 // Request body for creating a new comment

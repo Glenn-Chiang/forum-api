@@ -36,7 +36,7 @@ func (authMiddleware *AuthMiddleware) CheckAuth(ctx *gin.Context) {
 	}
 
 	// Check if token is valid and if so, retrieve the authenticated user
-	user, err := authMiddleware.service.ValidateToken(bearerToken[1]); 
+	user, err := authMiddleware.service.ValidateToken(bearerToken[1])
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		ctx.Abort()
@@ -50,10 +50,23 @@ func (authMiddleware *AuthMiddleware) CheckAuth(ctx *gin.Context) {
 }
 
 // Retrieve the authenticated user from the context
-func GetUserFromContext(ctx *gin.Context) (*models.User, error) {
+func GetUser(ctx *gin.Context) (*models.User, error) {
 	value, exists := ctx.Get("user")
 	if !exists {
 		return nil, errs.New(errs.ErrUnauthorized, "Unauthenticated")
+	}
+	user, ok := value.(*models.User)
+	if !ok {
+		return nil, errs.New(errs.ErrUnauthorized, "Unauthenticated")
+	}
+	return user, nil
+}
+
+// Retrieve the authenticated user from the context; no error if not authenticated
+func GetUserIfExists(ctx *gin.Context) (*models.User, error) {
+	value, exists := ctx.Get("user")
+	if !exists {
+		return nil, nil
 	}
 	user, ok := value.(*models.User)
 	if !ok {

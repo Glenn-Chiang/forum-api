@@ -16,22 +16,26 @@ func NewPostRepo(db *gorm.DB) *PostRepo {
 
 // Helper function that can be used by all repository functions that involve getting a list of posts
 // Helps to calculate computed fields and preload associations
-func buildPostsQuery(db *gorm.DB, limit, offset int, sortBy string) *gorm.DB {
+func buildPostsQuery(db *gorm.DB, limit, offset int, sortBy string, currentUserID uint) *gorm.DB {
 	return db.Model(&models.Post{}).
-		Preload("Topics"). // Include these fields in returned posts
-		Select("posts.*, SUM(votes.value) AS net_votes").       // Calculate net votes
-		Joins("LEFT JOIN votes ON posts.id = votes.post_id").
+		Preload("Author").Preload("Topics"). // Include these fields in returned posts
+		Select("posts.*, "+
+			"SUM(votes.value) AS net_votes"+ // Calculate net votes of the post
+																	"COALESCE(user_votes.value, 0) AS user_vote"). // Determine whether the current user has upvoted (1) or downvoted (-1) the post. If not voted, value defaults to 0.
+		Joins("LEFT JOIN votes ON posts.id = votes.post_id").                                                              // Get all vote records associated to the post
+		Joins("LEFT JOIN votes AS user_votes ON posts.id = user_votes.post_id AND user_votes.user_id = ?", currentUserID). // Get the single vote record made by the current user, that is associated to the post
 		Group("posts.id").
-		Limit(limit).   // Apply pagination
-		Offset(offset). // Apply pagination
-		Order(sortBy)   // Apply sorting
+		Limit(limit).            // Apply pagination
+		Offset(offset).          // Apply pagination
+		Order(sortBy).           // Apply sorting
+		Session(&gorm.Session{}) // Prevent query contamination
 }
 
 // Get a list of all posts including their associated topics
 // Also returns the total number of posts
-func (repo *PostRepo) GetList(limit, offset int, sortBy string) ([]models.Post, int64, error) {
+func (repo *PostRepo) GetList(limit, offset int, sortBy string, currentUserID uint) ([]models.Post, int64, error) {
 	var posts []models.Post
-	if err := buildPostsQuery(repo.DB, limit, offset, sortBy).Find(&posts).Error; err != nil {
+	if err := buildPostsQuery(repo.DB, limit, offset, sortBy, currentUserID).Find(&posts).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -46,14 +50,14 @@ func (repo *PostRepo) GetList(limit, offset int, sortBy string) ([]models.Post, 
 
 // Get all posts associated with at least 1 of the topics in the given list of topics
 // Also returns the total number of posts filtered
-func (repo *PostRepo) GetByTopics(topicIDs []uint, limit, offset int, sortBy string) ([]models.Post, int64, error) {
+func (repo *PostRepo) GetByTopics(topicIDs []uint, limit, offset int, sortBy string, currentUserID uint) ([]models.Post, int64, error) {
 	var posts []models.Post
 
 	// Filter out the posts associated with the given topics
 	filteredDB := repo.DB.Joins("JOIN post_topics ON posts.id = post_topics.post_id").
 		Where("post_topics.topic_id IN ?", topicIDs)
 
-	if err := buildPostsQuery(filteredDB, limit, offset, sortBy).Find(&posts).Error; err != nil {
+	if err := buildPostsQuery(filteredDB, limit, offset, sortBy, currentUserID).Find(&posts).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -75,6 +79,28 @@ func (repo *PostRepo) GetByID(id uint) (*models.Post, error) {
 		Where("id = ?", id).
 		Select("posts.*, SUM(votes.value) AS net_votes"). // Calculate net votes
 		Joins("LEFT JOIN votes ON votes.post_id = posts.id").
+		Group("posts.id").
+		Find(&post).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &post, nil
+}
+
+// Authenticated version of GetByID function, which also takes in currentUserID in order to compute user_votes field
+func (repo *PostRepo) GetByIDWithAuth(postID uint, currentUserID uint) (*models.Post, error) {
+	var post models.Post
+
+	err := repo.DB.Model(&models.Post{}).
+		Preload("Topics").Preload("Author"). // Include these fields in the returned post
+		Where("id = ?", postID).
+		Select("posts.*, "+
+			"SUM(votes.value) AS net_votes"+ // Calculate net votes of the post
+																	"COALESCE(user_votes.value, 0) AS user_vote"). // Determine whether the current user has upvoted (1) or downvoted (-1) the post. If not voted, value defaults to 0.
+		Joins("LEFT JOIN votes ON posts.id = votes.post_id").                                                              // Get all vote records associated to the post
+		Joins("LEFT JOIN votes AS user_votes ON posts.id = user_votes.post_id AND user_votes.user_id = ?", currentUserID). // Get the single vote record made by the current user, that is associated to the post
 		Group("posts.id").
 		Find(&post).Error
 
