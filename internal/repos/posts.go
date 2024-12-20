@@ -18,12 +18,13 @@ func NewPostRepo(db *gorm.DB) *PostRepo {
 // Also returns the total number of posts
 func (repo *PostRepo) GetList(limit, offset int, sortBy string) ([]models.Post, int64, error) {
 	var posts []models.Post
-	if err := repo.DB.Preload("Topics").Limit(limit).Offset(offset).Order(sortBy).Find(&posts).Error; err != nil {
+	if err := repo.DB.Preload("Votes").Preload("Topics").Limit(limit).Offset(offset).Order(sortBy).Find(&posts).Error; err != nil {
 		return nil, 0, err
 	}
-	
+
 	// Get the total number of posts
 	var count int64
+
 	if err := repo.DB.Model(&models.Post{}).Count(&count).Error; err != nil {
 		return nil, 0, err
 	}
@@ -42,7 +43,7 @@ func (repo *PostRepo) GetByTopics(topicIDs []uint, limit, offset int, sortBy str
 	query = query.Joins("JOIN post_topics ON posts.id = post_topics.post_id").Where("post_topics.topic_id IN ?", topicIDs)
 
 	// Get the filtered, sorted and paginated posts
-	if err := query.Preload("Topics").Limit(limit).Offset(offset).Order(sortBy).Find(&posts).Error; err != nil {
+	if err := query.Preload("Votes").Preload("Topics").Limit(limit).Offset(offset).Order(sortBy).Find(&posts).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -56,7 +57,7 @@ func (repo *PostRepo) GetByTopics(topicIDs []uint, limit, offset int, sortBy str
 }
 
 // Get all posts made by a particular user, including the associated topics of each post
-func (repo *PostRepo) GetByUserID(userId uint) ([]models.Post, error) {
+func (repo *PostRepo) GetByAuthorID(userId uint) ([]models.Post, error) {
 	var posts []models.Post
 	if err := repo.DB.Preload("Topics").Find(&posts, models.Post{AuthorID: userId}).Error; err != nil {
 		return nil, err
@@ -67,7 +68,7 @@ func (repo *PostRepo) GetByUserID(userId uint) ([]models.Post, error) {
 // Get an individual post including the associated author and topics
 func (repo *PostRepo) GetByID(id uint) (*models.Post, error) {
 	var post models.Post
-	if err := repo.DB.Preload("Topics").Preload("Author").First(&post, id).Error; err != nil {
+	if err := repo.DB.Preload("Votes").Preload("Topics").Preload("Author").First(&post, id).Error; err != nil {
 		return nil, err
 	}
 	return &post, nil

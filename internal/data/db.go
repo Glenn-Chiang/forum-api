@@ -15,7 +15,7 @@ func InitDB(dsn string) *gorm.DB {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	// Enable foreign key constraint
+	// Enable foreign key constraints for sqlite
 	db.Exec("PRAGMA foreign_keys = ON;")
 
 	// Migrate tables based on models

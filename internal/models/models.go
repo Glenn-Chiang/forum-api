@@ -31,9 +31,10 @@ type Post struct {
 
 // Record for one user's vote on one post
 type Vote struct {
-	UserID uint `gorm:"primaryKey;autoIncrement:false" json:"user_id"` // Composite primary key
+	// Composite primary key using post_id and user_id
 	PostID uint `gorm:"primaryKey;autoIncrement:false" json:"post_id"`
-	Value int `gorm:"not null" json:"vote"` // default: 0, upvote: 1, downvote: -1
+	UserID uint `gorm:"primaryKey;autoIncrement:false" json:"user_id"` 
+	Value int `gorm:"not null" json:"vote"` //upvote: 1, downvote: -1
 }
 
 // Structure of request body for creating a new post
