@@ -34,7 +34,7 @@ func main() {
 	postRepo := repos.NewPostRepo(db)
 	commentRepo := repos.NewCommentRepo(db)
 	topicRepo := repos.NewTopicRepo(db)
-	// voteRepo := repos.NewVoteRepo(db)
+	voteRepo := repos.NewVoteRepo(db)
 	
 	// Services (business logic)
 	userService := services.NewUserService(*userRepo)
@@ -42,12 +42,12 @@ func main() {
 	commentService := services.NewCommentService(*commentRepo, *postRepo, *userRepo)
 	topicService := services.NewTopicService(*topicRepo)
 	taggingService := services.NewTaggingService(*postRepo, *topicRepo)
-	// votingService := services.NewVotingService(*voteRepo)
+	votingService := services.NewVotingService(*voteRepo)
 	authService := services.NewAuthService(*userRepo)
 	
 	// Controllers (route handlers)
 	userController := controllers.NewUserController(*userService)
-	postController := controllers.NewPostController(*postService, *topicService, *taggingService)
+	postController := controllers.NewPostController(*postService, *topicService, *taggingService, *votingService)
 	commentController := controllers.NewCommentController(*commentService)
 	topicController := controllers.NewTopicController(*topicService)
 	authController := controllers.NewAuthController(authService)

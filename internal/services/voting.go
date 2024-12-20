@@ -14,13 +14,8 @@ func NewVotingService(repo repos.VoteRepo) *VotingService {
 }
 
 // Create a new vote associated to one user and one post, with a value of 1 indicating an upvote
-func (service *VotingService) Upvote(postID, userID uint) error {
-	return service.repo.Upsert(&models.Vote{PostID: postID, UserID: userID, Value: 1})
-}
-
-// Create a new vote associated to one user and one post, with a value of -1 indicating a downvote
-func (service *VotingService) Downvote(postID, userID uint) error {
-	return service.repo.Upsert(&models.Vote{PostID: postID, UserID: userID, Value: -1})
+func (service *VotingService) Vote(postID, userID uint, value bool) error {
+	return service.repo.Upsert(&models.Vote{PostID: postID, UserID: userID, Value: value})
 }
 
 // Remove the user's vote for a post

@@ -16,10 +16,11 @@ type PostController struct {
 	postService    services.PostService
 	topicService   services.TopicService
 	taggingService services.TaggingService
+	votingService services.VotingService
 }
 
-func NewPostController(postService services.PostService, topicService services.TopicService, taggingService services.TaggingService) *PostController {
-	return &PostController{postService, topicService, taggingService}
+func NewPostController(postService services.PostService, topicService services.TopicService, taggingService services.TaggingService, votingService services.VotingService) *PostController {
+	return &PostController{postService, topicService, taggingService, votingService}
 }
 
 // GET /posts or /posts?topic_id=1&page=1&limit=10
@@ -142,7 +143,7 @@ func (controller *PostController) Create(ctx *gin.Context) {
 // PATCH /posts/:id
 func (controller *PostController) Update(ctx *gin.Context) {
 	// Validate postID
-	postId, err := strconv.Atoi(ctx.Param("id"))
+	postID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
 		return
@@ -163,7 +164,7 @@ func (controller *PostController) Update(ctx *gin.Context) {
 	}
 
 	// Fetch the post to check its authorID
-	post, err := controller.postService.GetByID(uint(postId))
+	post, err := controller.postService.GetByID(uint(postID))
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -176,7 +177,7 @@ func (controller *PostController) Update(ctx *gin.Context) {
 	}
 
 	// Update the post
-	updatedPost, err := controller.postService.Update(uint(postId), requestBody.Title, requestBody.Content)
+	updatedPost, err := controller.postService.Update(uint(postID), requestBody.Title, requestBody.Content)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -189,7 +190,7 @@ func (controller *PostController) Update(ctx *gin.Context) {
 // Replace the list of topics associated with a post with a new list of topics
 func (controller *PostController) UpdateTags(ctx *gin.Context) {
 	// Validate postID
-	postId, err := strconv.Atoi(ctx.Param("id"))
+	postID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
 		return
@@ -210,7 +211,7 @@ func (controller *PostController) UpdateTags(ctx *gin.Context) {
 	}
 
 	// Fetch the post to check its authorID
-	post, err := controller.postService.GetByID(uint(postId))
+	post, err := controller.postService.GetByID(uint(postID))
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -223,18 +224,18 @@ func (controller *PostController) UpdateTags(ctx *gin.Context) {
 	}
 
 	// Update the post tags
-	if err := controller.taggingService.TagPostWithTopics(uint(postId), requestBody.TopicIDs); err != nil {
+	if err := controller.taggingService.TagPostWithTopics(uint(postID), requestBody.TopicIDs); err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
 
-	ctx.JSON(http.StatusNoContent, nil)
+	ctx.Status(http.StatusNoContent)
 }
 
 // DELETE /posts/:id
 func (controller *PostController) Delete(ctx *gin.Context) {
 	// Validate postID
-	postId, err := strconv.Atoi(ctx.Param("id"))
+	postID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
 		return
@@ -248,7 +249,7 @@ func (controller *PostController) Delete(ctx *gin.Context) {
 	}
 
 	// Fetch the post to check its authorID
-	post, err := controller.postService.GetByID(uint(postId))
+	post, err := controller.postService.GetByID(uint(postID))
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -261,10 +262,90 @@ func (controller *PostController) Delete(ctx *gin.Context) {
 	}
 
 	// Delete the post
-	if err := controller.postService.Delete(uint(postId)); err != nil {
+	if err := controller.postService.Delete(uint(postID)); err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
 
-	ctx.JSON(http.StatusNoContent, nil)
+	ctx.Status(http.StatusNoContent)
+}
+
+// PUT /posts/:post_id/votes/:user_id
+// Upvote or downvote a post. The vote is associated with a particular user.
+func (controller *PostController) Vote(ctx *gin.Context) {
+	// Validate post_id param
+	postID, err := strconv.Atoi(ctx.Param("post_id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
+		return
+	}
+
+	// Validate user_id param
+	userID, err := strconv.Atoi(ctx.Param("user_id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+	}
+
+	// Validate request body
+	var requestBody models.PostVote
+	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Retrieve the authenticated user from context
+	user, err := middleware.GetUserFromContext(ctx)
+	if err != nil {
+		errs.HTTPErrorResponse(ctx, err)
+		return
+	}
+
+	// Check that userID matches
+	if user.ID != uint(userID) {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	if err := controller.votingService.Vote(uint(postID), uint(userID), requestBody.Value); err != nil {
+		errs.HTTPErrorResponse(ctx, err)
+		return
+	}
+
+	ctx.Status(http.StatusNoContent)
+}
+
+// DELETE /posts/:post_id/votes/:user_id
+// Remove a user's vote on a post
+func (controller *PostController) DeleteVote(ctx *gin.Context) {
+	// Validate post_id param
+	postID, err := strconv.Atoi(ctx.Param("post_id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
+		return
+	}
+
+	// Validate user_id param
+	userID, err := strconv.Atoi(ctx.Param("user_id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+	}
+	// Retrieve the authenticated user from context
+	user, err := middleware.GetUserFromContext(ctx)
+	if err != nil {
+		errs.HTTPErrorResponse(ctx, err)
+		return
+	}
+
+	// Check that userID matches
+	if user.ID != uint(userID) {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	if err := controller.votingService.RemoveVote(uint(postID), uint(userID)); err != nil {
+		errs.HTTPErrorResponse(ctx, err)
+		return
+	}
+
+	ctx.Status(http.StatusNoContent)
 }
