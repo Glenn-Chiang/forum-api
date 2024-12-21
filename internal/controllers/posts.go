@@ -91,7 +91,7 @@ func (controller *PostController) GetList(ctx *gin.Context) {
 
 // GET /posts/:id
 func (controller *PostController) GetByID(ctx *gin.Context) {
-	id, err := strconv.Atoi(ctx.Param("id"))
+	id, err := strconv.Atoi(ctx.Param("post_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
 		return
@@ -157,7 +157,7 @@ func (controller *PostController) Create(ctx *gin.Context) {
 // PATCH /posts/:id
 func (controller *PostController) Update(ctx *gin.Context) {
 	// Validate postID
-	postID, err := strconv.Atoi(ctx.Param("id"))
+	postID, err := strconv.Atoi(ctx.Param("post_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
 		return
@@ -190,7 +190,7 @@ func (controller *PostController) Update(ctx *gin.Context) {
 // DELETE /posts/:id
 func (controller *PostController) Delete(ctx *gin.Context) {
 	// Validate postID
-	postID, err := strconv.Atoi(ctx.Param("id"))
+	postID, err := strconv.Atoi(ctx.Param("post_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
 		return
@@ -216,7 +216,7 @@ func (controller *PostController) Delete(ctx *gin.Context) {
 // Replace the list of topics associated with a post with a new list of topics
 func (controller *PostController) UpdateTags(ctx *gin.Context) {
 	// Validate postID
-	postID, err := strconv.Atoi(ctx.Param("id"))
+	postID, err := strconv.Atoi(ctx.Param("post_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
 		return

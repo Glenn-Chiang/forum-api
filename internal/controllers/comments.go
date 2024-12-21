@@ -22,7 +22,7 @@ func NewCommentController(service services.CommentService) *CommentController {
 // GET /posts/:id/comments
 func (controller *CommentController) GetByPostID(ctx *gin.Context) {
 	// Validate postId param
-	postId, err := strconv.Atoi(ctx.Param("id"))
+	postId, err := strconv.Atoi(ctx.Param("post_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
 		return

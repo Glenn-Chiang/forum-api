@@ -19,15 +19,24 @@ func RegisterAuthRoutes(router *gin.Engine, controller *controllers.AuthControll
 
 func RegisterPostRoutes(router *gin.Engine, auth *middleware.AuthMiddleware, controller *controllers.PostController) {
 	router.GET("/posts", controller.GetList)
-	router.GET("/posts/:id", controller.GetByID)
-	router.PUT("/posts/:id/topics", auth.CheckAuth, controller.UpdateTags)
+	// Get individual post
+	router.GET("/posts/:post_id", controller.GetByID)
+	// Create new post
 	router.POST("/posts", auth.CheckAuth, controller.Create)
-	router.PATCH("/posts/:id", auth.CheckAuth, controller.Update)
-	router.DELETE("/posts/:id", auth.CheckAuth, controller.Delete)
+	// Update post title and content
+	router.PATCH("/posts/:post_id", auth.CheckAuth, controller.Update)
+	// Update post tags
+	router.PUT("/posts/:post_id/topics", auth.CheckAuth, controller.UpdateTags)
+	// Delete post
+	router.DELETE("/posts/:post_id", auth.CheckAuth, controller.Delete)
+	// Upvote/downvote post
+	router.PUT("/posts/:post_id/votes/:user_id", auth.CheckAuth, controller.Vote)
+	// Remove user's vote for post
+	router.DELETE("/posts/:post_id/votes/:user_id", auth.CheckAuth, controller.DeleteVote)
 }
 
 func RegisterCommentRoutes(router *gin.Engine, auth *middleware.AuthMiddleware, controller *controllers.CommentController) {
-	router.GET("/posts/:id/comments", controller.GetByPostID)
+	router.GET("/posts/:post_id/comments", controller.GetByPostID)
 	router.POST("/comments", auth.CheckAuth, controller.Create)
 	router.PATCH("/comments/:id", auth.CheckAuth, controller.Update)
 	router.DELETE("/comments/:id", auth.CheckAuth, controller.Delete)
