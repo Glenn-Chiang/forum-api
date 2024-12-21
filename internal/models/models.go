@@ -31,6 +31,7 @@ type Post struct {
 	// Upvotes - downvotes. net_votes is a computed field that is not included in the database schema
 	NetVotes int64 `json:"votes" gorm:"-"`
 	// Computed field indicating whether the current user has upvoted (1), downvoted (-1) or not voted (0) the post
+	// If unauthenticated, default to 0
 	UserVote int `json:"user_vote" gorm:"-"`
 }
 

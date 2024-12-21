@@ -20,8 +20,8 @@ func buildPostsQuery(db *gorm.DB, limit, offset int, sortBy string, currentUserI
 	return db.Model(&models.Post{}).
 		Preload("Author").Preload("Topics"). // Include these fields in returned posts
 		Select("posts.*, "+
-			"SUM(votes.value) AS net_votes"+ // Calculate net votes of the post
-																	"COALESCE(user_votes.value, 0) AS user_vote"). // Determine whether the current user has upvoted (1) or downvoted (-1) the post. If not voted, value defaults to 0.
+			"SUM(votes.value) AS net_votes, "+ // Calculate net votes of the post
+			"COALESCE(user_votes.value, 0) AS user_vote").  // Get the current user's vote for the post
 		Joins("LEFT JOIN votes ON posts.id = votes.post_id").                                                              // Get all vote records associated to the post
 		Joins("LEFT JOIN votes AS user_votes ON posts.id = user_votes.post_id AND user_votes.user_id = ?", currentUserID). // Get the single vote record made by the current user, that is associated to the post
 		Group("posts.id").

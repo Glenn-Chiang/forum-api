@@ -49,28 +49,31 @@ func (authMiddleware *AuthMiddleware) CheckAuth(ctx *gin.Context) {
 	ctx.Next()
 }
 
-// Retrieve the authenticated user from the context; errir if not authenticated
-func GetUser(ctx *gin.Context) (*models.User, error) {
+// Retrieve the authenticated user from the context; error if not authenticated
+func GetUserID(ctx *gin.Context) (uint, error) {
 	value, exists := ctx.Get("user")
 	if !exists {
-		return nil, errs.New(errs.ErrUnauthorized, "Unauthenticated")
+		return 0, errs.New(errs.ErrUnauthorized, "Unauthenticated")
 	}
+	// Check if the "user" value is of the correct structure
 	user, ok := value.(*models.User)
 	if !ok {
-		return nil, errs.New(errs.ErrUnauthorized, "Unauthenticated")
+		return 0, errs.New(errs.ErrUnauthorized, "Unauthenticated")
 	}
-	return user, nil
+	return user.ID, nil
 }
 
 // Retrieve the authenticated user from the context; no error if not authenticated
-func GetUserOrNil(ctx *gin.Context) (*models.User, error) {
+// userId of 0 indicates unauthenticated
+func GetUserIDOrZero(ctx *gin.Context) (uint, error) {
 	value, exists := ctx.Get("user")
 	if !exists {
-		return nil, nil
+		return 0, nil
 	}
+	// Check if the "user" value is of the correct structure
 	user, ok := value.(*models.User)
 	if !ok {
-		return nil, errs.New(errs.ErrUnauthorized, "Unauthenticated")
+		return 0, errs.New(errs.ErrUnauthorized, "Unauthenticated")
 	}
-	return user, nil
+	return user.ID, nil
 }

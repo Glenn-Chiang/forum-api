@@ -19,17 +19,16 @@ func (repo *CommentRepo) GetByPostID(postId uint, limit int, offset int, sortBy 
 	var comments []models.Comment
 
 	// Apply filter
-	query := repo.DB
-	query = query.Where("post_id = ?", postId)
+	filteredDB := repo.DB.Where("post_id = ?", postId)
 
 	// Get the filtered, sorted and paginated comments
-	if err := query.Preload("Author").Limit(limit).Offset(offset).Order(sortBy).Find(&comments).Error; err != nil {
+	if err := filteredDB.Preload("Author").Limit(limit).Offset(offset).Order(sortBy).Find(&comments).Error; err != nil {
 		return nil, 0, err
 	}
 
 	// Get the total number of comments associated with the given post
 	var count int64
-	if err := query.Model(&models.Comment{}).Count(&count).Error; err != nil {
+	if err := filteredDB.Model(&models.Comment{}).Count(&count).Error; err != nil {
 		return nil, 0, err
 	}
 	

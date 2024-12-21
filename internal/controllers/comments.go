@@ -46,15 +46,15 @@ func (controller *CommentController) GetByPostID(ctx *gin.Context) {
 	// Get the "sortBy" query param and validate it
 	sortBy := ctx.DefaultQuery("sort", "new")
 
-	// Retrieve the authenticated user from context
-	user, err := middleware.GetUserOrNil(ctx)
+	// Retrieve the authenticated userID from context
+	userID, err := middleware.GetUserIDOrZero(ctx)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
 
 	// Get the list of comments
-	comments, totalCount, err := controller.service.GetByPostID(uint(postId), limit, offset, sortBy, user.ID)
+	comments, totalCount, err := controller.service.GetByPostID(uint(postId), limit, offset, sortBy, userID)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -73,8 +73,8 @@ func (controller *CommentController) Create(ctx *gin.Context) {
 		return
 	}
 
-	// Retrieve the authenticated user from context
-	user, err := middleware.GetUser(ctx)
+	// Retrieve the authenticated userID from context
+	userID, err := middleware.GetUserID(ctx)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -84,7 +84,7 @@ func (controller *CommentController) Create(ctx *gin.Context) {
 	comment := models.Comment{
 		Content:  requestBody.Content,
 		PostID:   requestBody.PostID,
-		AuthorID: user.ID,
+		AuthorID: userID,
 	}
 
 	// Create new comment
@@ -106,8 +106,8 @@ func (controller *CommentController) Update(ctx *gin.Context) {
 		return
 	}
 
-	// Retrieve the authenticated user from context
-	user, err := middleware.GetUser(ctx)
+	// Retrieve the authenticated userID from context
+	userID, err := middleware.GetUserID(ctx)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -121,7 +121,7 @@ func (controller *CommentController) Update(ctx *gin.Context) {
 	}
 
 	// Update the comment
-	updatedComment, err := controller.service.Update(uint(id), requestBody.Content, user.ID)
+	updatedComment, err := controller.service.Update(uint(id), requestBody.Content, userID)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -139,15 +139,15 @@ func (controller *CommentController) Delete(ctx *gin.Context) {
 		return
 	}
 
-	// Retrieve the authenticated user from context
-	user, err := middleware.GetUser(ctx)
+	// Retrieve the authenticated userID from context
+	userID, err := middleware.GetUserID(ctx)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
 
 	// Delete the comment
-	if err := controller.service.Delete(uint(id), user.ID); err != nil {
+	if err := controller.service.Delete(uint(id), userID); err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
