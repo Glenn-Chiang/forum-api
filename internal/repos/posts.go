@@ -21,7 +21,7 @@ func buildPostsQuery(db *gorm.DB, limit, offset int, sortBy string, currentUserI
 		Preload("Author").Preload("Topics"). // Include these fields in returned posts
 		Select("posts.*, "+
 			"SUM(votes.value) AS net_votes, "+ // Calculate net votes of the post
-			"COALESCE(user_votes.value, 0) AS user_vote").  // Get the current user's vote for the post
+			"user_votes.value AS user_vote").  // Get the current user's vote for the post
 		Joins("LEFT JOIN votes ON posts.id = votes.post_id").                                                              // Get all vote records associated to the post
 		Joins("LEFT JOIN votes AS user_votes ON posts.id = user_votes.post_id AND user_votes.user_id = ?", currentUserID). // Get the single vote record made by the current user, that is associated to the post
 		Group("posts.id").
@@ -76,9 +76,9 @@ func (repo *PostRepo) GetByID(id uint) (*models.Post, error) {
 
 	err := repo.DB.Model(&models.Post{}).
 		Preload("Topics").Preload("Author"). // Include these fields in the returned post
-		Where("id = ?", id).
 		Select("posts.*, SUM(votes.value) AS net_votes"). // Compute net votes
 		Joins("LEFT JOIN votes ON votes.post_id = posts.id").
+		Where("id = ?", id).
 		Group("posts.id").
 		Find(&post).Error
 
@@ -95,19 +95,19 @@ func (repo *PostRepo) GetByIDWithAuth(postID uint, currentUserID uint) (*models.
 
 	err := repo.DB.Model(&models.Post{}).
 		Preload("Topics").Preload("Author"). // Include these fields in the returned post
-		Where("id = ?", postID).
 		Select("posts.*, "+
-			"SUM(votes.value) AS net_votes, "+ // Compute net votes of the post
-			"COALESCE(user_votes.value, 0) AS user_vote"). // Get the current user's vote for the post
+		"COALESCE(SUM(votes.value),0) AS net_votes, "+ // Compute net votes of the post
+		"COALESCE(user_votes.value,0) AS user_vote"). // Get the current user's vote for the post
 		Joins("LEFT JOIN votes ON posts.id = votes.post_id").                                                              // Get all vote records associated to the post
 		Joins("LEFT JOIN votes AS user_votes ON posts.id = user_votes.post_id AND user_votes.user_id = ?", currentUserID). // Get the single vote record made by the current user, that is associated to the post
+		Where("id = ?", postID).
 		Group("posts.id").
 		Find(&post).Error
 
 	if err != nil {
 		return nil, err
 	}
-
+	
 	return &post, nil
 }
 

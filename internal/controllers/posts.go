@@ -53,11 +53,7 @@ func (controller *PostController) GetList(ctx *gin.Context) {
 	tags := ctx.QueryArray("tag")
 
 	// Retrieve the authenticated userID from context. If not authenticated, userID is 0.
-	userID, err := middleware.GetUserIDOrZero(ctx)
-	if err != nil {
-		errs.HTTPErrorResponse(ctx, err)
-		return
-	}
+	userID:= middleware.GetUserIDOrZero(ctx)
 	
 	// If no tags are specified, don't filter
 	if len(tags) == 0 {
@@ -98,12 +94,8 @@ func (controller *PostController) GetByID(ctx *gin.Context) {
 	}
 
 	// Retrieve the authenticated userID from context. If not authenticated, userID is 0.
-	userID, err := middleware.GetUserIDOrZero(ctx)
-	if err != nil {
-		errs.HTTPErrorResponse(ctx, err)
-		return
-	}
-
+	userID := middleware.GetUserIDOrZero(ctx)
+	
 	post, err := controller.postService.GetByIDWithAuth(uint(id), userID)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)

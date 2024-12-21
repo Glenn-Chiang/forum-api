@@ -52,15 +52,13 @@ func main() {
 	topicController := controllers.NewTopicController(*topicService)
 	authController := controllers.NewAuthController(authService)
 
-	// Authentication middleware to validate jwt from requests
-	authMiddleware := middleware.NewAuthMiddleware(authService)
-
+	
 	// Initialize router
 	router := gin.Default()
-
+	
 	// Logger middleware to log request body of all requests
 	router.Use(middleware.ResponseLogger)
-
+	
 	// CORS middleware
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: []string{clientUrl},
@@ -71,11 +69,15 @@ func main() {
 		MaxAge: 12 * time.Hour,
 	}))
 
+	// Authentication middleware to validate jwt from requests
+	authMiddleware := middleware.NewAuthMiddleware(authService)
+	router.Use(authMiddleware.Authenticate())
+
 	// Register route handlers
-	routes.RegisterUserRoutes(router, authMiddleware, userController)
-	routes.RegisterPostRoutes(router, authMiddleware, postController)
-	routes.RegisterCommentRoutes(router, authMiddleware, commentController)
-	routes.RegisterTopicRoutes(router, authMiddleware, topicController)
+	routes.RegisterUserRoutes(router, userController)
+	routes.RegisterPostRoutes(router, postController)
+	routes.RegisterCommentRoutes(router, commentController)
+	routes.RegisterTopicRoutes(router, topicController)
 	routes.RegisterAuthRoutes(router, authController)
 
 	router.Run(serverUrl)

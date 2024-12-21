@@ -47,12 +47,8 @@ func (controller *CommentController) GetByPostID(ctx *gin.Context) {
 	sortBy := ctx.DefaultQuery("sort", "new")
 
 	// Retrieve the authenticated userID from context
-	userID, err := middleware.GetUserIDOrZero(ctx)
-	if err != nil {
-		errs.HTTPErrorResponse(ctx, err)
-		return
-	}
-
+	userID := middleware.GetUserIDOrZero(ctx)
+	
 	// Get the list of comments
 	comments, totalCount, err := controller.service.GetByPostID(uint(postId), limit, offset, sortBy, userID)
 	if err != nil {

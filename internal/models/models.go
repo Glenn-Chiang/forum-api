@@ -28,11 +28,14 @@ type Post struct {
 	Topics    []Topic   `json:"topics" gorm:"many2many:post_topics;constraint:OnDelete:CASCADE;"` 
 	// Array of votes associated with this post. Not included in json.
 	Votes []Vote `json:"-"`
-	// Upvotes - downvotes. net_votes is a computed field that is not included in the database schema
-	NetVotes int64 `json:"votes" gorm:"-"`
-	// Computed field indicating whether the current user has upvoted (1), downvoted (-1) or not voted (0) the post
-	// If unauthenticated, default to 0
-	UserVote int `json:"user_vote" gorm:"-"`
+	
+	// Upvotes minus downvotes
+	// Computed field, not included in database
+	NetVotes int `json:"votes" gorm:"->;-:migration"`
+	
+	// Indicates whether the current user has upvoted (1), downvoted (-1) or not voted (0) the post
+	// Computed field, not included in database
+	UserVote int `json:"user_vote" gorm:"->;-:migration"`
 }
 
 // Record for one user's vote on one post
