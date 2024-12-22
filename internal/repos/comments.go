@@ -15,11 +15,11 @@ func NewCommentRepo(db *gorm.DB) *CommentRepo {
 }
 
 // Get all comments associated with the given post
-func (repo *CommentRepo) GetByPostID(postId uint, limit int, offset int, sortBy string, currentUserID uint) ([]models.Comment, int64, error) {
+func (repo *CommentRepo) GetByPostID(postID uint, limit int, offset int, sortBy string, currentUserID uint) ([]models.Comment, int64, error) {
 	var comments []models.Comment
 
 	// Apply filter
-	filteredDB := repo.DB.Where("post_id = ?", postId)
+	filteredDB := repo.DB.Where("post_id = ?", postID)
 
 	err := repo.DB.Model(&models.Comment{}).
 		Preload("Author"). // Include comment author
@@ -28,8 +28,12 @@ func (repo *CommentRepo) GetByPostID(postId uint, limit int, offset int, sortBy 
 			"COALESCE(SUM(votes.value),0) AS net_votes, "+
 			// Get the current user's vote for the comment
 			"COALESCE(user_votes.value,0) AS user_vote").
-		Joins("LEFT JOIN comment_votes AS votes ON comments.id = votes.comment_id"). // Get all vote records associated to the comment
-		Joins("LEFT JOIN comment_votes AS user_votes ON comments.id = user_votes.comment_id AND user_votes.user_id = ?", currentUserID). // Get the single vote record made by the current user, that is associated to the comment
+		// Filter comments corresponding to the post
+		Where("comments.post_id = ?", postID). 
+		// Get all vote records associated to the comment
+		Joins("LEFT JOIN comment_votes AS votes ON comments.id = votes.comment_id"). 
+		// Get the single vote record made by the current user, that is associated to the comment
+		Joins("LEFT JOIN comment_votes AS user_votes ON comments.id = user_votes.comment_id AND user_votes.user_id = ?", currentUserID). 
 		Group("comments.id").
 		Limit(limit).Offset(offset).Order(sortBy).
 		Find(&comments).Error
