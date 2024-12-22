@@ -30,8 +30,6 @@ func RegisterPostRoutes(router *gin.Engine, controller *controllers.PostControll
 	router.DELETE("/posts/:post_id", controller.Delete)
 	// Upvote/downvote post
 	router.PUT("/posts/:post_id/votes/:user_id", controller.Vote)
-	// Remove user's vote for post
-	router.DELETE("/posts/:post_id/votes/:user_id", controller.DeleteVote)
 }
 
 func RegisterCommentRoutes(router *gin.Engine, controller *controllers.CommentController) {

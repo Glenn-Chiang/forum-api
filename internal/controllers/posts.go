@@ -274,33 +274,3 @@ func (controller *PostController) Vote(ctx *gin.Context) {
 
 	ctx.Status(http.StatusNoContent)
 }
-
-// DELETE /posts/:post_id/votes/:user_id
-// Remove a user's vote on a post
-func (controller *PostController) DeleteVote(ctx *gin.Context) {
-	// Validate post_id param
-	postID, err := strconv.Atoi(ctx.Param("post_id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
-		return
-	}
-
-	// Validate user_id param
-	userID, err := strconv.Atoi(ctx.Param("user_id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
-	}
-	// Retrieve the authenticated authenticateedUserID from context
-	authenticateedUserID, err := middleware.GetUserID(ctx)
-	if err != nil {
-		errs.HTTPErrorResponse(ctx, err)
-		return
-	}
-
-	if err := controller.votingService.RemoveVote(uint(postID), uint(userID), authenticateedUserID); err != nil {
-		errs.HTTPErrorResponse(ctx, err)
-		return
-	}
-
-	ctx.Status(http.StatusNoContent)
-}
