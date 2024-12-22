@@ -14,13 +14,12 @@ import (
 
 type PostController struct {
 	postService    services.PostService
-	topicService   services.TopicService
 	taggingService services.TaggingService
 	votingService  services.VotingService
 }
 
-func NewPostController(postService services.PostService, topicService services.TopicService, taggingService services.TaggingService, votingService services.VotingService) *PostController {
-	return &PostController{postService, topicService, taggingService, votingService}
+func NewPostController(postService services.PostService, taggingService services.TaggingService, votingService services.VotingService) *PostController {
+	return &PostController{postService, taggingService, votingService}
 }
 
 // GET /posts or /posts?topic_id=1&page=1&limit=10
@@ -53,8 +52,8 @@ func (controller *PostController) GetList(ctx *gin.Context) {
 	tags := ctx.QueryArray("tag")
 
 	// Retrieve the authenticated userID from context. If not authenticated, userID is 0.
-	userID:= middleware.GetUserIDOrZero(ctx)
-	
+	userID := middleware.GetUserIDOrZero(ctx)
+
 	// If no tags are specified, don't filter
 	if len(tags) == 0 {
 		posts, totalCount, err = controller.postService.GetList(limit, offset, sortBy, userID)
@@ -95,7 +94,7 @@ func (controller *PostController) GetByID(ctx *gin.Context) {
 
 	// Retrieve the authenticated userID from context. If not authenticated, userID is 0.
 	userID := middleware.GetUserIDOrZero(ctx)
-	
+
 	post, err := controller.postService.GetByIDWithAuth(uint(id), userID)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
@@ -113,16 +112,8 @@ func (controller *PostController) Create(ctx *gin.Context) {
 		return
 	}
 
-	// Retrieve the authenticated userID from context. If not authenticated, userID is 0.
+	// Retrieve the authenticated userID from context
 	userID, err := middleware.GetUserID(ctx)
-	if err != nil {
-		errs.HTTPErrorResponse(ctx, err)
-		return
-	}
-
-	// Get the topics associated with the list of topic IDs
-	topics, err := controller.topicService.GetByIDs(requestBody.TopicIDs)
-	// Handle errors with fetching topics
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -133,12 +124,17 @@ func (controller *PostController) Create(ctx *gin.Context) {
 		Title:    requestBody.Title,
 		Content:  requestBody.Content,
 		AuthorID: userID,
-		Topics:   topics,
 	}
 
 	// Create the post
 	newPost, err := controller.postService.Create(&post)
 	if err != nil {
+		errs.HTTPErrorResponse(ctx, err)
+		return
+	}
+
+	// Set the post tags
+	if err := controller.taggingService.TagPostWithTopics(uint(post.ID), requestBody.TopicIDs, userID); err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
@@ -162,7 +158,7 @@ func (controller *PostController) Update(ctx *gin.Context) {
 		return
 	}
 
-	// Retrieve the authenticated userID from context. If not authenticated, userID is 0.
+	// Retrieve the authenticated userID from context
 	userID, err := middleware.GetUserID(ctx)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
@@ -188,7 +184,7 @@ func (controller *PostController) Delete(ctx *gin.Context) {
 		return
 	}
 
-	// Retrieve the authenticated userID from context. If not authenticated, userID is 0.
+	// Retrieve the authenticated userID from context
 	userID, err := middleware.GetUserID(ctx)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
@@ -221,7 +217,7 @@ func (controller *PostController) UpdateTags(ctx *gin.Context) {
 		return
 	}
 
-	// Retrieve the authenticated userID from context. If not authenticated, userID is 0.
+	// Retrieve the authenticated userID from context
 	userID, err := middleware.GetUserID(ctx)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
@@ -254,20 +250,20 @@ func (controller *PostController) Vote(ctx *gin.Context) {
 	}
 
 	// Validate request body
-	var requestBody models.PostVote
+	var requestBody models.VoteUpdate
 	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Retrieve the authenticated userID from context. If not authenticated, userID is 0.
+	// Retrieve the authenticated userID from context
 	authenticatedUserID, err := middleware.GetUserID(ctx)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
 
-	if err := controller.votingService.Vote(uint(postID), uint(userID), requestBody.Value, authenticatedUserID); err != nil {
+	if err := controller.votingService.VotePost(uint(postID), uint(userID), requestBody.Value, authenticatedUserID); err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
 	}

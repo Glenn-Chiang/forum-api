@@ -4,7 +4,6 @@ import (
 	errs "cvwo-backend/internal/errors"
 	"cvwo-backend/internal/models"
 	"cvwo-backend/internal/services"
-	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -19,28 +18,25 @@ func NewAuthMiddleware(service *services.AuthService) *AuthMiddleware {
 }
 
 // Middleware to check if the request is authenticated and if so, attach the user object to the context
+// If not authenticated, don't return error. Instead simply don't set the user in context.
 func (middleware *AuthMiddleware) Authenticate() gin.HandlerFunc {
 	return func (ctx *gin.Context) {
 		authHeader := ctx.GetHeader("Authorization")
 	
 		// Check if Authorization header is missing
 		if authHeader == "" {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing authorization header"})
 			return
 		}
 	
 		// Check if token is in valid format: "Bearer mytoken123"
 		bearerToken := strings.Split(authHeader, " ")
 		if len(bearerToken) != 2 || bearerToken[0] != "Bearer" {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Malformed token"})
 			return
 		}
 	
 		// Check if token is valid and if so, retrieve the authenticated user
 		user, err := middleware.service.ValidateToken(bearerToken[1])
 		if err != nil {
-			errs.HTTPErrorResponse(ctx, err)
-			ctx.Abort()
 			return
 		}
 	

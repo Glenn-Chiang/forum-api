@@ -14,18 +14,30 @@ func NewCommentRepo(db *gorm.DB) *CommentRepo {
 	return &CommentRepo{DB: db}
 }
 
-// Get all comments associated with the given post. Each comment includes the associated author.
+// Get all comments associated with the given post
 func (repo *CommentRepo) GetByPostID(postId uint, limit int, offset int, sortBy string, currentUserID uint) ([]models.Comment, int64, error) {
 	var comments []models.Comment
 
 	// Apply filter
 	filteredDB := repo.DB.Where("post_id = ?", postId)
 
-	// Get the filtered, sorted and paginated comments
-	if err := filteredDB.Preload("Author").Limit(limit).Offset(offset).Order(sortBy).Find(&comments).Error; err != nil {
+	err := repo.DB.Model(&models.Comment{}).
+		Preload("Author"). // Include comment author
+		Select("comments.*, "+
+			// Compute net votes of the comment
+			"COALESCE(SUM(votes.value),0) AS net_votes, "+
+			// Get the current user's vote for the comment
+			"COALESCE(user_votes.value,0) AS user_vote").
+		Joins("LEFT JOIN comment_votes AS votes ON comments.id = votes.comment_id"). // Get all vote records associated to the comment
+		Joins("LEFT JOIN comment_votes AS user_votes ON comments.id = user_votes.comment_id AND user_votes.user_id = ?", currentUserID). // Get the single vote record made by the current user, that is associated to the comment
+		Group("comments.id").
+		Limit(limit).Offset(offset).Order(sortBy).
+		Find(&comments).Error
+
+	if err != nil {
 		return nil, 0, err
 	}
-
+		
 	// Get the total number of comments associated with the given post
 	var count int64
 	if err := filteredDB.Model(&models.Comment{}).Count(&count).Error; err != nil {
@@ -35,12 +47,37 @@ func (repo *CommentRepo) GetByPostID(postId uint, limit int, offset int, sortBy 
 	return comments, count, nil
 }
 
-// Get a particular comment including the associated author
+// Get an individual comment
 func (repo *CommentRepo) GetByID(id uint) (*models.Comment, error) {
 	var comment models.Comment
-	if err := repo.DB.Preload("Author").First(&comment, id).Error; err != nil {
+	if err := repo.DB.First(&comment, id).Error; err != nil {
 		return nil, err
 	}
+	return &comment, nil
+}
+
+// Similar to GetByID but includes additional computed fields and preloaded associations
+// Takes in currentUserID in order to compute user_vote field
+func (repo *CommentRepo) GetByIDWithAuth(commentID uint, currentUserID uint) (*models.Comment, error) {
+	var comment models.Comment
+
+	err := repo.DB.Model(&models.Comment{}).
+		Preload("Author").
+		Select("comments.*, " +
+			// Compute net votes for the comment
+			"COALESCE(SUM(votes.value),0) AS net_votes, " +
+			// Get the current user's vote for the comment
+			"COALESCE(user_votes.value, 0) AS user_vote").
+		Joins("LEFT JOIN comment_votes AS votes ON comments.id = votes.comment_id").
+		Joins("LEFT JOIN comment_votes AS user_votes ON comments.id = user_votes.comment_id AND user_votes.user_id = ?", currentUserID).
+		Where("comments.id = ?", commentID).
+		Group("comments.id").
+		Find(&comment).Error
+	
+	if err != nil {
+		return nil, err
+	}
+
 	return &comment, nil
 }
 

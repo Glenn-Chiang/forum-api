@@ -12,11 +12,12 @@ import (
 )
 
 type CommentController struct {
-	service services.CommentService
+	commentService services.CommentService
+	votingService  services.VotingService
 }
 
-func NewCommentController(service services.CommentService) *CommentController {
-	return &CommentController{service}
+func NewCommentController(commentService services.CommentService, votingService services.VotingService) *CommentController {
+	return &CommentController{commentService, votingService}
 }
 
 // GET /posts/:id/comments
@@ -48,9 +49,9 @@ func (controller *CommentController) GetByPostID(ctx *gin.Context) {
 
 	// Retrieve the authenticated userID from context
 	userID := middleware.GetUserIDOrZero(ctx)
-	
+
 	// Get the list of comments
-	comments, totalCount, err := controller.service.GetByPostID(uint(postId), limit, offset, sortBy, userID)
+	comments, totalCount, err := controller.commentService.GetByPostID(uint(postId), limit, offset, sortBy, userID)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -84,7 +85,7 @@ func (controller *CommentController) Create(ctx *gin.Context) {
 	}
 
 	// Create new comment
-	newComment, err := controller.service.Create(&comment)
+	newComment, err := controller.commentService.Create(&comment)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -117,7 +118,7 @@ func (controller *CommentController) Update(ctx *gin.Context) {
 	}
 
 	// Update the comment
-	updatedComment, err := controller.service.Update(uint(id), requestBody.Content, userID)
+	updatedComment, err := controller.commentService.Update(uint(id), requestBody.Content, userID)
 	if err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
@@ -143,10 +144,48 @@ func (controller *CommentController) Delete(ctx *gin.Context) {
 	}
 
 	// Delete the comment
-	if err := controller.service.Delete(uint(id), userID); err != nil {
+	if err := controller.commentService.Delete(uint(id), userID); err != nil {
 		errs.HTTPErrorResponse(ctx, err)
 		return
 	}
 
 	ctx.JSON(http.StatusNoContent, nil)
+}
+
+// PUT /comments/:comment_id/votes/:user_id
+// Upvote or downvote a comment. The vote is associated with a particular user.
+func (controller *CommentController) Vote(ctx *gin.Context) {
+	// Validate comment_id param
+	commentID, err := strconv.Atoi(ctx.Param("comment_id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid comment ID"})
+		return
+	}
+
+	// Validate user_id param
+	userID, err := strconv.Atoi(ctx.Param("user_id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+	}
+
+	// Validate request body
+	var requestBody models.VoteUpdate
+	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Retrieve the authenticated userID from context
+	authenticatedUserID, err := middleware.GetUserID(ctx)
+	if err != nil {
+		errs.HTTPErrorResponse(ctx, err)
+		return
+	}
+
+	if err := controller.votingService.VoteComment(uint(commentID), uint(userID), requestBody.Value, authenticatedUserID); err != nil {
+		errs.HTTPErrorResponse(ctx, err)
+		return
+	}
+
+	ctx.Status(http.StatusNoContent)
 }

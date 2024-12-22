@@ -19,7 +19,7 @@ func InitDB(dsn string) *gorm.DB {
 	db.Exec("PRAGMA foreign_keys = ON;")
 
 	// Migrate tables based on models
-	if err := db.AutoMigrate(&models.User{}, &models.Post{}, &models.Comment{}, &models.Topic{}, &models.Vote{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.Post{}, &models.Comment{}, &models.Topic{}, &models.PostVote{}, &models.CommentVote{}); err != nil {
 		log.Fatalf("Failed to migrate tables: %v", err)
 	}
 

@@ -7,17 +7,17 @@ import (
 	"gorm.io/gorm"
 )
 
-type VoteRepo struct {
+type PostVoteRepo struct {
 	DB *gorm.DB
 }
 
-func NewVoteRepo(db *gorm.DB) *VoteRepo {
-	return &VoteRepo{DB: db}
+func NewPostVoteRepo(db *gorm.DB) *PostVoteRepo {
+	return &PostVoteRepo{DB: db}
 }
 
 // Update existing vote or create new vote if the user has not voted for the post
-func (repo *VoteRepo) Upsert(vote *models.Vote) error {
-	var existingVote models.Vote
+func (repo *PostVoteRepo) Upsert(vote *models.PostVote) error {
+	var existingVote models.PostVote
 	if err := repo.DB.First(&existingVote, "post_id = ? AND user_id = ?", vote.PostID, vote.UserID).Error; err != nil {
 		// If this user has not voted for this post, create new vote
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -32,6 +32,6 @@ func (repo *VoteRepo) Upsert(vote *models.Vote) error {
 }
 
 // Delete a vote, i.e. user removes their vote for a post
-func (repo *VoteRepo) Delete(postID, userID uint) error {
-	return repo.DB.Delete(&models.Vote{}, "post_id = ? AND user_id = ?", postID, userID).Error
+func (repo *PostVoteRepo) Delete(postID, userID uint) error {
+	return repo.DB.Delete(&models.PostVote{}, "post_id = ? AND user_id = ?", postID, userID).Error
 }

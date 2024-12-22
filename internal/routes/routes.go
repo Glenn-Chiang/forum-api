@@ -33,10 +33,16 @@ func RegisterPostRoutes(router *gin.Engine, controller *controllers.PostControll
 }
 
 func RegisterCommentRoutes(router *gin.Engine, controller *controllers.CommentController) {
+	// Get comments associated with a post
 	router.GET("/posts/:post_id/comments", controller.GetByPostID)
+	// Create new comment
 	router.POST("/comments", controller.Create)
-	router.PATCH("/comments/:id", controller.Update)
-	router.DELETE("/comments/:id", controller.Delete)
+	// Update comment content
+	router.PATCH("/comments/:comment_id", controller.Update)
+	// Delete comment
+	router.DELETE("/comments/:comment_id", controller.Delete)
+	// Upvote/downvote comment
+	router.PUT("/comments/:comment_id/votes/:user_id", controller.Vote)
 }
 
 func RegisterTopicRoutes(router *gin.Engine, controller *controllers.TopicController) {

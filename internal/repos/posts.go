@@ -24,8 +24,8 @@ func buildPostsQuery(db *gorm.DB, limit, offset int, sortBy string, currentUserI
 			"COALESCE(SUM(votes.value),0) AS net_votes, "+
 																	// Get the current user's vote for the post
 																	"COALESCE(user_votes.value,0) AS user_vote").
-		Joins("LEFT JOIN votes ON posts.id = votes.post_id").                                                              // Get all vote records associated to the post
-		Joins("LEFT JOIN votes AS user_votes ON posts.id = user_votes.post_id AND user_votes.user_id = ?", currentUserID). // Get the single vote record made by the current user, that is associated to the post
+		Joins("LEFT JOIN post_votes AS votes ON posts.id = votes.post_id").                                                              // Get all vote records associated to the post
+		Joins("LEFT JOIN post_votes AS user_votes ON posts.id = user_votes.post_id AND user_votes.user_id = ?", currentUserID). // Get the single vote record made by the current user, that is associated to the post
 		Group("posts.id").
 		Limit(limit).Offset(offset).Order(sortBy).
 		Session(&gorm.Session{}) // Prevent query contamination
@@ -70,39 +70,30 @@ func (repo *PostRepo) GetByTopics(topicIDs []uint, limit, offset int, sortBy str
 	return posts, count, nil
 }
 
-// Get an individual post including the associated author and topics
+// Get an individual post
 func (repo *PostRepo) GetByID(id uint) (*models.Post, error) {
 	var post models.Post
-
-	err := repo.DB.Model(&models.Post{}).
-		Preload("Topics").Preload("Author").              // Include these fields in the returned post
-		Select("posts.*, SUM(votes.value) AS net_votes"). // Compute net votes
-		Joins("LEFT JOIN votes ON votes.post_id = posts.id").
-		Where("id = ?", id).
-		Group("posts.id").
-		Find(&post).Error
-
-	if err != nil {
+	if err := repo.DB.First(&post, id).Error; err != nil {
 		return nil, err
 	}
-
 	return &post, nil
 }
 
-// Authenticated version of GetByID function, which also takes in currentUserID in order to compute user_votes field
+// Similar to GetByID but includes additional computed fields and preloaded associations
+// Takes in currentUserID in order to compute user_vote field
 func (repo *PostRepo) GetByIDWithAuth(postID uint, currentUserID uint) (*models.Post, error) {
 	var post models.Post
 
 	err := repo.DB.Model(&models.Post{}).
 		Preload("Topics").Preload("Author"). // Include these fields in the returned post
 		Select("posts.*, "+
-			// Compute net votes of the post
+			// Compute net votes for the post
 			"COALESCE(SUM(votes.value),0) AS net_votes, "+
 																	// Get the current user's vote for the post
 																	"COALESCE(user_votes.value,0) AS user_vote").
-		Joins("LEFT JOIN votes ON posts.id = votes.post_id").                                                              // Get all vote records associated to the post
-		Joins("LEFT JOIN votes AS user_votes ON posts.id = user_votes.post_id AND user_votes.user_id = ?", currentUserID). // Get the single vote record made by the current user, that is associated to the post
-		Where("id = ?", postID).
+		Joins("LEFT JOIN post_votes AS votes ON posts.id = votes.post_id").                                                              // Get all vote records associated to the post
+		Joins("LEFT JOIN post_votes AS user_votes ON posts.id = user_votes.post_id AND user_votes.user_id = ?", currentUserID). // Get the single vote record made by the current user, that is associated to the post
+		Where("posts.id = ?", postID).
 		Group("posts.id").
 		Find(&post).Error
 
