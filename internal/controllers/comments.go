@@ -97,7 +97,7 @@ func (controller *CommentController) Create(ctx *gin.Context) {
 // PATCH /comments/:id
 func (controller *CommentController) Update(ctx *gin.Context) {
 	// Validate commentID
-	id, err := strconv.Atoi(ctx.Param("id"))
+	id, err := strconv.Atoi(ctx.Param("comment_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid comment ID"})
 		return
@@ -130,7 +130,7 @@ func (controller *CommentController) Update(ctx *gin.Context) {
 // DELETE /comments/:id
 func (controller *CommentController) Delete(ctx *gin.Context) {
 	// Validate commentID
-	id, err := strconv.Atoi(ctx.Param("id"))
+	id, err := strconv.Atoi(ctx.Param("comment_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid comment ID"})
 		return
