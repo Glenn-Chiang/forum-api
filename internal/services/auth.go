@@ -48,7 +48,7 @@ func (service *AuthService) Authenticate(authInput *models.AuthInput) (*models.U
 	// Set jwt claims including userID and expiration time
 	claims := &jwt.RegisteredClaims{
 		ID:        strconv.Itoa(int(user.ID)),
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(365 * 24 * time.Hour)),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
