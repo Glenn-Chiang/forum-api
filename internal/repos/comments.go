@@ -27,7 +27,7 @@ func (repo *CommentRepo) GetByPostID(postID uint, limit int, offset int, sortBy 
 			// Compute net votes of the comment
 			"COALESCE(SUM(votes.value),0) AS net_votes, "+
 			// Get the current user's vote for the comment
-			"COALESCE(user_votes.value,0) AS user_vote").
+			"COALESCE(MAX(user_votes.value),0) AS user_vote").
 		// Filter comments corresponding to the post
 		Where("comments.post_id = ?", postID). 
 		// Get all vote records associated to the comment
@@ -71,7 +71,7 @@ func (repo *CommentRepo) GetByIDWithAuth(commentID uint, currentUserID uint) (*m
 			// Compute net votes for the comment
 			"COALESCE(SUM(votes.value),0) AS net_votes, " +
 			// Get the current user's vote for the comment
-			"COALESCE(user_votes.value, 0) AS user_vote").
+			"COALESCE(MAX(user_votes.value), 0) AS user_vote").
 		Joins("LEFT JOIN comment_votes AS votes ON comments.id = votes.comment_id").
 		Joins("LEFT JOIN comment_votes AS user_votes ON comments.id = user_votes.comment_id AND user_votes.user_id = ?", currentUserID).
 		Where("comments.id = ?", commentID).
