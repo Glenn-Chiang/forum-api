@@ -17,9 +17,6 @@ import (
 	"cvwo-backend/internal/services"
 )
 
-const serverUrl = "localhost:8080"
-const clientUrl = "*" // TODO: Set to frontend domain
-
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
@@ -61,7 +58,7 @@ func main() {
 
 	// CORS middleware
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{clientUrl},
+		AllowOrigins:     []string{os.Getenv("FRONTEND_URL")},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -80,5 +77,5 @@ func main() {
 	routes.RegisterTopicRoutes(router, topicController)
 	routes.RegisterAuthRoutes(router, authController)
 
-	router.Run(serverUrl)
+	router.Run()
 }
