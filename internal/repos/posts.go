@@ -22,8 +22,8 @@ func buildPostsQuery(db *gorm.DB, limit, offset int, sortBy string, currentUserI
 		Select("posts.*, "+
 			// Compute net votes of the post
 			"COALESCE(SUM(votes.value),0) AS net_votes, "+
-																	// Get the current user's vote for the post
-																	"COALESCE(user_votes.value,0) AS user_vote").
+			// Get the current user's vote for the post
+			"COALESCE(MAX(user_votes.value),0) AS user_vote").
 		Joins("LEFT JOIN post_votes AS votes ON posts.id = votes.post_id").                                                              // Get all vote records associated to the post
 		Joins("LEFT JOIN post_votes AS user_votes ON posts.id = user_votes.post_id AND user_votes.user_id = ?", currentUserID). // Get the single vote record made by the current user, that is associated to the post
 		Group("posts.id").
@@ -90,11 +90,11 @@ func (repo *PostRepo) GetByIDWithAuth(postID uint, currentUserID uint) (*models.
 			// Compute net votes for the post
 			"COALESCE(SUM(votes.value),0) AS net_votes, "+
 																	// Get the current user's vote for the post
-																	"COALESCE(user_votes.value,0) AS user_vote").
+																	"COALESCE(MAX(user_votes.value),0) AS user_vote").
 		Joins("LEFT JOIN post_votes AS votes ON posts.id = votes.post_id").                                                              // Get all vote records associated to the post
 		Joins("LEFT JOIN post_votes AS user_votes ON posts.id = user_votes.post_id AND user_votes.user_id = ?", currentUserID). // Get the single vote record made by the current user, that is associated to the post
 		Where("posts.id = ?", postID).
-		Group("posts.id").
+		Group("posts.id, posts.title, posts.content, posts.created_at, posts.updated_at, posts.author_id").
 		Find(&post).Error
 
 	if err != nil {
