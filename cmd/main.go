@@ -20,7 +20,7 @@ import (
 func main() {
 	// Load .env file in development but not in production
 	if os.Getenv("ENV") == "development" {
-		if err := godotenv.Load(); err != nil {
+		if err := godotenv.Load(".env.development"); err != nil {
 			log.Fatal("Error loading .env file")
 		}
 	}
