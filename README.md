@@ -1,4 +1,4 @@
-## Local usage
+## Local setup
 
 1. Clone the repository and navigate to it
 ```
